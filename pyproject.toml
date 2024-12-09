@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nbanetwork"
+version = "0.1.0"
+description = "NBA Network Analysis and Machine Learning"
+readme = "README.rst"
+authors = [
+  {name = "sea_turt1e", email = "h.yamada.bg@gmail.com"}
+]
+maintainers = [
+  {name = "sea_turt1e", email = "h.yamada.bg@gmail.com"}
+]
+classifiers = [
+
+]
+license = {text = "Apache Software License 2.0"}
+dependencies = [
+  "typer"
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage",  # testing
+    "mypy",  # linting
+    "pytest",  # testing
+    "ruff"  # linting
+]
+
+[project.urls]
+
+bugs = "https://github.com/sea_turt1e/nbanetwork/issues"
+changelog = "https://github.com/sea_turt1e/nbanetwork/blob/master/changelog.md"
+homepage = "https://github.com/sea_turt1e/nbanetwork"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+
+
+
+# Mypy
+# ----
+
+[tool.mypy]
+files = "."
+
+# Use strict defaults
+strict = true
+warn_unreachable = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+# Don't require test functions to include types
+module = "tests.*"
+allow_untyped_defs = true
+disable_error_code = "attr-defined"
+
