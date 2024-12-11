@@ -1,63 +1,32 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "nbanetwork"
-version = "0.1.0"
+version = "0.0.1"
 description = "NBA Network Analysis and Machine Learning"
-readme = "README.rst"
 authors = [
-  {name = "sea_turt1e", email = "h.yamada.bg@gmail.com"}
+  { name = "sea_turt1e" },
 ]
-maintainers = [
-  {name = "sea_turt1e", email = "h.yamada.bg@gmail.com"}
-]
+
+readme = "README.md"
 classifiers = [
-
+    "Programming Language :: Python :: 3",
+    
 ]
-license = {text = "Apache Software License 2.0"}
-dependencies = [
-  "typer"
-]
+requires-python = "~=3.12"
 
-[project.optional-dependencies]
-dev = [
-    "coverage",  # testing
-    "mypy",  # linting
-    "pytest",  # testing
-    "ruff"  # linting
-]
+[tool.black]
+line-length = 99
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+)/
+'''
 
-[project.urls]
-
-bugs = "https://github.com/sea_turt1e/nbanetwork/issues"
-changelog = "https://github.com/sea_turt1e/nbanetwork/blob/master/changelog.md"
-homepage = "https://github.com/sea_turt1e/nbanetwork"
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.package-data]
-"*" = ["*.*"]
-
-
-
-
-# Mypy
-# ----
-
-[tool.mypy]
-files = "."
-
-# Use strict defaults
-strict = true
-warn_unreachable = true
-warn_no_return = true
-
-[[tool.mypy.overrides]]
-# Don't require test functions to include types
-module = "tests.*"
-allow_untyped_defs = true
-disable_error_code = "attr-defined"
-
+[tool.ruff.lint.isort]
+known_first_party = ["nbanetwork"]
+force_sort_within_sections = true
