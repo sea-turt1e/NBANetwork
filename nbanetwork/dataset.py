@@ -25,5 +25,25 @@ def main(
     # -----------------------------------------
 
 
+@app.command(name="download_from_kaggle_hub")
+def download_from_kaggle_hub(
+    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
+    hub_path: Path,
+    output_path: Path = RAW_DATA_DIR / "",
+    # ----------------------------------------------
+):
+    import os
+    import kagglehub
+
+    logger.info("Downloading dataset from Kaggle Hub...")
+    print(str(output_path))
+    path = kagglehub.dataset_download(str(hub_path))
+    print("Path to dataset files:", path)
+    # output_pathへのコピー処理を追加
+    logger.success("Download complete.")
+    os.system(f"cp -r {path} {output_path}")
+    logger.success("Copy complete.")
+
+
 if __name__ == "__main__":
     app()
