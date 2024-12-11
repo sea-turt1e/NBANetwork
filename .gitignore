@@ -166,3 +166,4 @@ data/*
 tmp/*
 .vscode/*
 .DS_Store
+models/*
