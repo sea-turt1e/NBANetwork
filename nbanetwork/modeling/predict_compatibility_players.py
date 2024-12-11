@@ -103,15 +103,15 @@ def main(
         idx1 = node_ids.get(player1)
         idx2 = node_ids.get(player2)
         if idx1 is None or idx2 is None:
-            return "プレイヤーが見つかりません。"
+            return "cannot find player"
         emb1 = z[idx1]
         emb2 = z[idx2]
         score = torch.sigmoid((emb1 * emb2).sum()).item()
-        return f"{player1} と {player2} の相性スコア: {score:.4f}"
+        return f"{player1} and {player2} compatibility: {score:.2f}"
 
     # 例: 相性予測
     print(predict_compatibility("Randy Livingston_1996-97", "Charles Barkley_1996-97"))
-    print(predict_compatibility("Michael Jordan_1996-97", "Stephen Curry_2019-20"))
+    print(predict_compatibility("Jimmy Butler_2022-23", "Stephen Curry_2019-20"))
 
 
 if __name__ == "__main__":
