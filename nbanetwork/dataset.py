@@ -1,11 +1,11 @@
 from pathlib import Path
 
-import typer
 import ipdb
+import typer
 from loguru import logger
 from tqdm import tqdm
 
-from nbanetwork.config import PROCESSED_DATA_DIR, RAW_DATA_DIR, INTERIM_DATA_DIR
+from nbanetwork.config import INTERIM_DATA_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
 
 app = typer.Typer()
 
@@ -32,6 +32,7 @@ def download_from_kaggle_hub(
     output_path: Path = RAW_DATA_DIR / "",
 ):
     import os
+
     import kagglehub
 
     logger.info("Downloading dataset from Kaggle Hub...")
@@ -50,8 +51,8 @@ def player_network_dataset(
     node_output_path: Path = INTERIM_DATA_DIR / "player_nodes.csv",
     edge_output_path: Path = INTERIM_DATA_DIR / "player_edges.csv",
 ):
-    import pandas as pd
     import networkx as nx
+    import pandas as pd
 
     # CSVファイルの読み込み
     df = pd.read_csv(input_path)
@@ -125,8 +126,8 @@ def process_player_nodes_dataset(
     output_path: Path = PROCESSED_DATA_DIR / "player_nodes.csv",
 ):
     import random
+
     import pandas as pd
-    import torch
 
     # read nodes data
     node_df = pd.read_csv(input_path)
@@ -168,6 +169,44 @@ def process_player_nodes_dataset(
     node_df.to_csv(output_path, index=False)
 
     logger.success("Node data processing complete.")
+
+
+@app.command(name="create_pos_neg_edge")
+def create_pos_neg_edge(
+    nodes_path: Path = PROCESSED_DATA_DIR / "player_nodes.csv",
+    edge_path: Path = INTERIM_DATA_DIR / "player_edges.csv",
+    output_dir: Path = INTERIM_DATA_DIR,
+    is_debug: bool = False,
+):
+    import random
+
+    from nbanetwork.utils import create_node_ids_features_edge_index
+
+    node_ids, _, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
+
+    # create positive samples
+    pos_edge = edge_index.t().tolist()
+
+    # create negative samples
+    num_nodes = len(node_ids)
+    neg_edge = []
+    logger.info("Creating negative samples...")
+    if is_debug:
+        pos_edge = pos_edge[:100]
+    for _ in tqdm(range(len(pos_edge))):
+        i, j = random.randint(0, num_nodes - 1), random.randint(0, num_nodes - 1)
+        if i != j and [i, j] not in pos_edge and [j, i] not in pos_edge and [i, j] not in neg_edge:
+            neg_edge.append([i, j])
+    logger.info("Negative samples created.")
+    # save positive and negative samples
+    with open(output_dir / "players_pos_edge.txt", "w") as f:
+        for edge in pos_edge:
+            f.write(f"{edge[0]},{edge[1]}\n")
+    with open(output_dir / "players_neg_edge.txt", "w") as f:
+        for edge in neg_edge:
+            f.write(f"{edge[0]},{edge[1]}\n")
+
+    logger.success("Positive and negative samples created.")
 
 
 if __name__ == "__main__":
