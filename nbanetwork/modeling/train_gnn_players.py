@@ -13,11 +13,12 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    nodes_path: Path = PROCESSED_DATA_DIR / "player_nodes.csv",
-    edge_path: Path = INTERIM_DATA_DIR / "player_edges.csv",
+    node_edges_date_dir: Path = INTERIM_DATA_DIR / "players",
+    pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
+    year_from: int = 1996,
+    year_until: int = 2021,
     model_save_path: Path = MODELS_DIR / "gnn_model.pth",
-    pos_edge_path: Path = INTERIM_DATA_DIR / "players_pos_edge.txt",
-    neg_edge_path: Path = INTERIM_DATA_DIR / "players_neg_edge.txt",
+    epochs: int = 5000,
     is_debug: bool = False,
 ):
     import random
@@ -29,12 +30,16 @@ def main(
     from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
     # create features and edge index
+    nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}_normalized.csv"
+    edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
     _, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
 
     # create data
     data = create_data(features, edge_index)
 
     # read positive and negative edges
+    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
+    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
     with open(pos_edge_path, "r") as f:
         pos_edge = [list(map(int, line.strip().split(","))) for line in f]
     with open(neg_edge_path, "r") as f:
@@ -89,7 +94,9 @@ def main(
 
     # training loop
     logger.info("Start training...")
-    for epoch in tqdm(range(1, 10001)):
+    if is_debug:
+        epochs = 100
+    for epoch in tqdm(range(epochs)):
         loss = train()
         if epoch % 20 == 0:
             auc = test()
