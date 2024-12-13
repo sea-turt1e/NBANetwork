@@ -45,20 +45,44 @@ def download_from_kaggle_hub(
     logger.success("Copy complete.")
 
 
+@app.command(name="split_dataset")
+def split_dataset(
+    input_path: Path = RAW_DATA_DIR / "players" / "all_seasons.csv",
+    output_dir: Path = INTERIM_DATA_DIR / "players",
+    test_year_from: int = 2021,
+    final_data_year: int = 2023,
+):
+    import pandas as pd
+
+    logger.info("Splitting dataset...")
+    df = pd.read_csv(input_path)
+    test_seasons = [f"{year}-{str(year + 1)[-2:]}" for year in range(test_year_from, final_data_year)]
+    train_df = df[~df["season"].isin(test_seasons)]
+    test_df = df[df["season"].isin(test_seasons)]
+    train_path = str(output_dir) + "/" + f"1996-{test_year_from}.csv"
+    test_path = str(output_dir) + "/" + f"{test_year_from}-{final_data_year}.csv"
+    train_df.to_csv(train_path, index=False)
+    test_df.to_csv(test_path, index=False)
+    logger.success("Dataset split complete.")
+
+
 @app.command(name="player_network_dataset")
 def player_network_dataset(
-    input_path: Path = RAW_DATA_DIR / "players/all_seasons.csv",
-    node_output_path: Path = INTERIM_DATA_DIR / "player_nodes.csv",
-    edge_output_path: Path = INTERIM_DATA_DIR / "player_edges.csv",
+    input_dir: Path = INTERIM_DATA_DIR / "players",
+    output_dir: Path = INTERIM_DATA_DIR / "players",
+    year_from: int = 1996,
+    year_until: int = 2021,
 ):
+    import os
+
     import networkx as nx
     import pandas as pd
 
-    # CSVファイルの読み込み
+    input_path = str(input_dir) + "/" + f"{year_from}-{year_until}.csv"
+    # read csv
     df = pd.read_csv(input_path)
 
-    # ノード属性の生成
-    # 必要な属性のみを選択
+    # create player nodes and edges
     node_attributes = df[
         [
             "player_name",
@@ -85,51 +109,59 @@ def player_network_dataset(
         ]
     ]
 
-    # プレイヤーをユニークにする
+    # player makes unique by season
     node_attributes = node_attributes.drop_duplicates(subset=["player_name", "season"])
 
-    # ノードIDとしてプレイヤー名とシーズンを使用
+    # use player_name and season as node_id
     node_attributes["node_id"] = node_attributes["player_name"] + "_" + node_attributes["season"]
 
-    # ノード属性データの保存
+    # save node attributes
+    node_output_path = str(output_dir) + "/" + f"player_nodes_{year_from}-{year_until}.csv"
     node_attributes.to_csv(node_output_path, index=False)
 
-    # エッジデータの生成
+    # create graph
     G = nx.Graph()
 
-    # ノードの追加
+    # add node attributes
     for _, row in node_attributes.iterrows():
         G.add_node(row["node_id"], **row.to_dict())
 
-    # 同じチームかつ同じシーズンのプレイヤー間にエッジを追加
+    # add edges between players in the same team
     for season in node_attributes["season"].unique():
         season_data = node_attributes[node_attributes["season"] == season]
         teams = season_data["team_abbreviation"].unique()
         for team in teams:
             team_players = season_data[season_data["team_abbreviation"] == team]["node_id"].tolist()
-            # プレイヤー間の全てのペアにエッジを追加
+            # add edges between players in the same team
             for i in range(len(team_players)):
                 for j in range(i + 1, len(team_players)):
                     G.add_edge(team_players[i], team_players[j])
 
-    # エッジデータの保存
+    # save edges
     edges = list(G.edges())
     edges_df = pd.DataFrame(edges, columns=["source", "target"])
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    edge_output_path = str(output_dir) + "/" + f"player_edges_{year_from}-{year_until}.csv"
     edges_df.to_csv(edge_output_path, index=False)
 
-    print("ノード属性データとエッジデータの生成が完了しました。")
+    print("Nodes and edges saved.")
 
 
-@app.command(name="process_player_nodes_dataset")
-def process_player_nodes_dataset(
-    input_path: Path = INTERIM_DATA_DIR / "player_nodes.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "player_nodes.csv",
+@app.command(name="normalize_player_nodes_dataset")
+def normalize_player_nodes_dataset(
+    input_dir: Path = INTERIM_DATA_DIR / "players",
+    output_dir: Path = INTERIM_DATA_DIR / "players",
+    year_from: int = 1996,
+    year_until: int = 2021,
 ):
+    import os
     import random
 
     import pandas as pd
 
     # read nodes data
+    input_path = str(input_dir) + "/" + f"player_nodes_{year_from}-{year_until}.csv"
     node_df = pd.read_csv(input_path)
 
     # process undrafted players
@@ -166,6 +198,9 @@ def process_player_nodes_dataset(
     ]
     for col in numeric_columns:
         node_df[col] = pd.to_numeric(node_df[col], errors="coerce")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_path = str(output_dir) + "/" + f"player_nodes_{year_from}-{year_until}_normalized.csv"
     node_df.to_csv(output_path, index=False)
 
     logger.success("Node data processing complete.")
@@ -173,15 +208,18 @@ def process_player_nodes_dataset(
 
 @app.command(name="create_pos_neg_edge")
 def create_pos_neg_edge(
-    nodes_path: Path = PROCESSED_DATA_DIR / "player_nodes.csv",
-    edge_path: Path = INTERIM_DATA_DIR / "player_edges.csv",
-    output_dir: Path = INTERIM_DATA_DIR,
+    input_dir: Path = INTERIM_DATA_DIR / "players",
+    output_dir: Path = PROCESSED_DATA_DIR / "players",
+    year_from: int = 1996,
+    year_until: int = 2021,
     is_debug: bool = False,
 ):
     import random
 
     from nbanetwork.utils import create_node_ids_features_edge_index
 
+    nodes_path = input_dir / f"player_nodes_{year_from}-{year_until}_normalized.csv"
+    edge_path = input_dir / f"player_edges_{year_from}-{year_until}.csv"
     node_ids, _, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
 
     # create positive samples
@@ -199,10 +237,10 @@ def create_pos_neg_edge(
             neg_edge.append([i, j])
     logger.info("Negative samples created.")
     # save positive and negative samples
-    with open(output_dir / "players_pos_edge.txt", "w") as f:
+    with open(output_dir / f"players_pos_edge_{year_from}-{year_until}.txt", "w") as f:
         for edge in pos_edge:
             f.write(f"{edge[0]},{edge[1]}\n")
-    with open(output_dir / "players_neg_edge.txt", "w") as f:
+    with open(output_dir / f"players_neg_edge_{year_from}-{year_until}.txt", "w") as f:
         for edge in neg_edge:
             f.write(f"{edge[0]},{edge[1]}\n")
 
