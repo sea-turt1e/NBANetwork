@@ -62,7 +62,10 @@ def main(
         return score
 
     # Example: check compability
-    # print(predict_compatibility("Stephen Curry_", "Kevin Durant_2022-23"))
+    e_p1 = "Stephen Curry_2009_7"
+    e_p2 = "Rui Hachimura_2019_9"
+    example_comptibility = predict_compatibility(e_p1, e_p2)
+    print(f'Example: Compatibility between "{e_p1}" and "{e_p2}" is {example_comptibility}')
 
     # save predictions
     predictions_path = predictions_dir / f"compatibility_{year_from}-{year_until}.csv"
