@@ -5,7 +5,7 @@ import typer
 from loguru import logger
 from tqdm import tqdm
 
-from nbanetwork.config import INTERIM_DATA_DIR, MODELS_DIR, PROCESSED_DATA_DIR
+from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
 from nbanetwork.modeling.gnn_models import GCN
 
 app = typer.Typer()
@@ -13,12 +13,12 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    node_edges_date_dir: Path = INTERIM_DATA_DIR / "players",
+    node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 1996,
     year_until: int = 2021,
     model_save_path: Path = MODELS_DIR / "gnn_model.pth",
-    epochs: int = 5000,
+    epochs: int = 1000,
     is_debug: bool = False,
 ):
 
@@ -29,7 +29,7 @@ def main(
     from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
     # create features and edge index
-    nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}_normalized.csv"
+    nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
     edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
     _, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
 
@@ -52,8 +52,9 @@ def main(
     # split train and valid data
     edges = pos_edge + neg_edge
     labels = [1] * len(pos_edge) + [0] * len(neg_edge)
-    train_edges, test_edges, train_labels, test_labels = train_test_split(edges, labels, test_size=0.2, random_state=42)
-
+    train_edges, test_edges, train_labels, test_labels = train_test_split(
+        edges, labels, test_size=0.2, random_state=42, shuffle=True
+    )
     train_edge_index = torch.tensor(train_edges, dtype=torch.long).t()
     train_labels = torch.tensor(train_labels, dtype=torch.float)
     test_edge_index = torch.tensor(test_edges, dtype=torch.long).t()
@@ -92,13 +93,15 @@ def main(
             return roc_auc_score(labels, preds)
 
     # training loop
+    # scheduler = ReduceLROnPlateau(optimizer, "max", patience=10)
     logger.info("Start training...")
     if is_debug:
         epochs = 300
     for epoch in tqdm(range(epochs)):
         loss = train()
-        if epoch % 100 == 0:
-            auc = test()
+        auc = test()
+        # scheduler.step(auc)
+        if epoch % 20 == 0:
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
     logger.success("Training complete.")
 

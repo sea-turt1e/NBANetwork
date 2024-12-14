@@ -6,6 +6,33 @@
 
 NBA Network Analysis and Machine Learning
 
+## Environment
+```
+python 3.12.7
+macOS
+```
+
+## Installation
+```
+pip install -r requirements.txt
+```
+
+## Players Network
+Predict players who have never been on the same team before and have good chemistry.
+
+### pipeline script
+You can run the pipeline script.
+```
+sh pipeline.sh
+```
+
+### pipeline steps
+- download the data
+- preprocess the data
+- train the model
+- predict the players who have never been on the same team before and have good chemistry.
+
+
 ## Project Organization
 
 ```
