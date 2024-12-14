@@ -21,7 +21,6 @@ def main(
     epochs: int = 5000,
     is_debug: bool = False,
 ):
-    import random
 
     import torch
     from sklearn.metrics import roc_auc_score
@@ -50,7 +49,7 @@ def main(
         pos_edge = pos_edge[:100]
         neg_edge = neg_edge[:100]
 
-    # split train and test data
+    # split train and valid data
     edges = pos_edge + neg_edge
     labels = [1] * len(pos_edge) + [0] * len(neg_edge)
     train_edges, test_edges, train_labels, test_labels = train_test_split(edges, labels, test_size=0.2, random_state=42)
@@ -95,10 +94,10 @@ def main(
     # training loop
     logger.info("Start training...")
     if is_debug:
-        epochs = 100
+        epochs = 300
     for epoch in tqdm(range(epochs)):
         loss = train()
-        if epoch % 20 == 0:
+        if epoch % 100 == 0:
             auc = test()
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
     logger.success("Training complete.")
