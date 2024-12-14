@@ -39,7 +39,7 @@ mkdocs-get-deps==0.2.0
 mpmath==1.3.0
 multidict==6.1.0
 mypy-extensions==1.0.0
--e git+ssh://git@github.com/sea-turt1e/NBANetwork.git@d97df1752a401c55237e818f6063f22a1efd8b5a#egg=nbanetwork
+-e git+ssh://git@github.com/sea-turt1e/NBANetwork.git@62797b29490e38a5460f110e52ff06dfbf47d68b#egg=nbanetwork
 networkx==3.4.2
 numpy==2.2.0
 packaging==24.2
