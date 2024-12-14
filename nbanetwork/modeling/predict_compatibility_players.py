@@ -6,7 +6,7 @@ import typer
 from loguru import logger
 from tqdm import tqdm
 
-from nbanetwork.config import INTERIM_DATA_DIR, MODELS_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
+from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
 from nbanetwork.modeling.gnn_models import GCN
 
 app = typer.Typer()
@@ -14,7 +14,7 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    node_edges_date_dir: Path = INTERIM_DATA_DIR / "players",
+    node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 2021,
     year_until: int = 2023,
     model_path: Path = MODELS_DIR / "gnn_model.pth",
@@ -28,7 +28,7 @@ def main(
     from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
     # create features and edge index
-    nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}_normalized.csv"
+    nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
     edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
     node_ids, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path, is_train=False)
 
@@ -62,7 +62,7 @@ def main(
         return score
 
     # Example: check compability
-    # print(predict_compatibility("Stephen Curry_2022-23", "Kevin Durant_2022-23"))
+    # print(predict_compatibility("Stephen Curry_", "Kevin Durant_2022-23"))
 
     # save predictions
     predictions_path = predictions_dir / f"compatibility_{year_from}-{year_until}.csv"
@@ -86,6 +86,7 @@ def main(
                     fw_all.write(f"{player1},{player2},{score}\n")
                     if {player1[:-8], player2[:-8]} & set(common_players_name):
                         fw_common.write(f"{player1},{player2},{score}\n")
+    logger.success("Predictions saved.")
 
 
 if __name__ == "__main__":
