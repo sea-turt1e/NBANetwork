@@ -10,22 +10,6 @@ from nbanetwork.config import INTERIM_DATA_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
 app = typer.Typer()
 
 
-@app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    input_path: Path = RAW_DATA_DIR / "dataset.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "dataset.csv",
-    # ----------------------------------------------
-):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Processing dataset...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Processing dataset complete.")
-    # -----------------------------------------
-
-
 @app.command(name="download_from_kaggle_hub")
 def download_from_kaggle_hub(
     hub_path: Path,
@@ -212,6 +196,7 @@ def create_pos_neg_edge(
     output_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 1996,
     year_until: int = 2021,
+    is_train: bool = True,
     is_debug: bool = False,
 ):
     import random
@@ -220,7 +205,7 @@ def create_pos_neg_edge(
 
     nodes_path = input_dir / f"player_nodes_{year_from}-{year_until}_normalized.csv"
     edge_path = input_dir / f"player_edges_{year_from}-{year_until}.csv"
-    node_ids, _, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
+    node_ids, _, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path, is_train=is_train)
 
     # create positive samples
     pos_edge = edge_index.t().tolist()
