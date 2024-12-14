@@ -1,3 +1,4 @@
+import csv
 from pathlib import Path
 
 import ipdb
@@ -5,7 +6,7 @@ import typer
 from loguru import logger
 from tqdm import tqdm
 
-from nbanetwork.config import INTERIM_DATA_DIR, MODELS_DIR, PROCESSED_DATA_DIR
+from nbanetwork.config import INTERIM_DATA_DIR, MODELS_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
 from nbanetwork.modeling.gnn_models import GCN
 
 app = typer.Typer()
@@ -29,13 +30,13 @@ def main(
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}_normalized.csv"
     edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
-    node_ids, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
+    node_ids, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path, is_train=False)
 
     # create data
     data = create_data(features, edge_index)
 
     model = GCN(in_channels=features.shape[1], hidden_channels=64)
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, weights_only=True))
     model.eval()
 
     # get embeddings of nodes
@@ -65,15 +66,26 @@ def main(
 
     # save predictions
     predictions_path = predictions_dir / f"compatibility_{year_from}-{year_until}.csv"
+    prediction_common_player_path = predictions_dir / f"compatibility_common_player_{year_from}-{year_until}.csv"
     if not os.path.exists(predictions_dir):
         os.makedirs(predictions_dir)
-    with open(predictions_path, "w") as f:
-        f.write("player1,player2,score\n")
+    with (
+        open(predictions_path, "w") as fw_all,
+        open(prediction_common_player_path, "w") as fw_common,
+        open(RAW_DATA_DIR / "nbadatabase" / "csv" / "common_player_info.csv", "r") as fr_common,
+    ):
+        fw_all.write("player1,player2,score\n")
+        fw_common.write("player1,player2,score\n")
+        reader = csv.reader(fr_common, delimiter=",")
+        next(reader)
+        common_players_name = [row[3] for row in reader]
         for player1 in tqdm(node_ids):
             for player2 in node_ids:
                 if player1 != player2:
                     score = predict_compatibility(player1, player2)
-                    f.write(f"{player1},{player2},{score}\n")
+                    fw_all.write(f"{player1},{player2},{score}\n")
+                    if {player1[:-8], player2[:-8]} & set(common_players_name):
+                        fw_common.write(f"{player1},{player2},{score}\n")
 
 
 if __name__ == "__main__":
