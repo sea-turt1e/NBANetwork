@@ -6,7 +6,7 @@ from loguru import logger
 from tqdm import tqdm
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
-from nbanetwork.modeling.gnn_models import GCN
+from nbanetwork.modeling.gnn_models import GAT, GCN
 
 app = typer.Typer()
 
@@ -28,21 +28,22 @@ def main(
 
     from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
+    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
+    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
-    _, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
+    _, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
+        nodes_path, pos_edge_path, neg_edge_path, is_train=True
+    )
+
+    edge_index = torch.cat([pos_edge_index, neg_edge_index], dim=1)
 
     # create data
     data = create_data(features, edge_index)
 
-    # read positive and negative edges
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
-    with open(pos_edge_path, "r") as f:
-        pos_edge = [list(map(int, line.strip().split(","))) for line in f]
-    with open(neg_edge_path, "r") as f:
-        neg_edge = [list(map(int, line.strip().split(","))) for line in f]
+    pos_edge = pos_edge_index.t().tolist()
+    neg_edge = neg_edge_index.t().tolist()
 
     # use only a part of the data for debugging
     if is_debug:
