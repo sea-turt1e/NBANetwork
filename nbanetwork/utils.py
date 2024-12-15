@@ -1,22 +1,38 @@
+import ast
+
 import ipdb
 import pandas as pd
 import torch
+from loguru import logger
 from torch_geometric.data import Data
+from tqdm import tqdm
 
 
-def create_node_ids_features_edge_index(nodes_path: str, edge_path: str, is_train: bool = True):
+def create_node_ids_features_edge_index(nodes_path: str, pos_edge_path: str, neg_edge_path: str, is_train: bool = True):
     # read attributes of nodes and edges
     node_df = pd.read_csv(nodes_path)
-    edge_df = pd.read_csv(edge_path)
+    pos_edge_df = pd.read_csv(pos_edge_path)
+    neg_edge_df = pd.read_csv(neg_edge_path)
     # sfuhhle if is_train=True.
     if is_train:
         node_df = node_df.sample(frac=1).reset_index(drop=True)
-        edge_df = edge_df.sample(frac=1).reset_index(drop=True)
+        pos_edge_df = pos_edge_df.sample(frac=1).reset_index(drop=True)
+        neg_edge_df = neg_edge_df.sample(frac=1).reset_index(drop=True)
 
     # map node ids
     node_ids = {name: idx for idx, name in enumerate(node_df["node_id"])}
-    source = edge_df["source"].map(node_ids).tolist()
-    target = edge_df["target"].map(node_ids).tolist()
+    pos_source = pos_edge_df["source"].map(node_ids).tolist()
+    pos_target = pos_edge_df["target"].map(node_ids).tolist()
+    neg_source = neg_edge_df["source"].map(node_ids).tolist()
+    neg_target = neg_edge_df["target"].map(node_ids).tolist()
+
+    # create edge index
+    pos_edge = list(zip(pos_source, pos_target))
+    neg_edge = list(zip(neg_source, neg_target))
+
+    # create labels (has edge or not)
+    pos_edge_index = torch.tensor(pos_edge, dtype=torch.long).t().contiguous()
+    neg_edge_index = torch.tensor(neg_edge, dtype=torch.long).t().contiguous()
 
     # create features
     drop_node_df_columns = ["node_id", "player_name"]
@@ -30,10 +46,7 @@ def create_node_ids_features_edge_index(nodes_path: str, edge_path: str, is_trai
     # features = node_df[categorical_columns + numerical_columns]
     features = torch.tensor(features.values, dtype=torch.float)
 
-    # create labels (has edge or not)
-    edge_index = torch.tensor([source, target], dtype=torch.long)
-
-    return node_ids, features, edge_index
+    return node_ids, features, pos_edge_index, neg_edge_index
 
 
 def create_data(features: torch.Tensor, edge_index: torch.Tensor):

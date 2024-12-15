@@ -36,7 +36,7 @@ typer nbanetwork/dataset.py run player_network_dataset --year-from $year_from --
 typer nbanetwork/dataset.py run player_network_dataset --year-from $year_until --year-until $year_last
 
 # make positive and negative edge train dataset
-typer nbanetwork/dataset.py run create_pos_neg_edge --year-from $year_from --year-until $year_until
+typer nbanetwork/dataset.py run increase_edges --year-from $year_from --year-until $year_until
 # make positive and negative edge test dataset
-typer nbanetwork/dataset.py run create_pos_neg_edge --year-from $year_until --year-until $year_last
+typer nbanetwork/dataset.py run increase_edges --year-from $year_until --year-until $year_last
 

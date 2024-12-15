@@ -86,3 +86,8 @@ sh pipeline.sh
 
 --------
 
+## Data Sources
+- [NBA Database](https://www.kaggle.com/datasets/wyattowalsh/basketball): CC BY-SA 4.0
+- [NBA Players](https://www.kaggle.com/datasets/justinas/nba-players-data)
+
+
