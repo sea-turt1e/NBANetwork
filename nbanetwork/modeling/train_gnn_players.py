@@ -31,7 +31,7 @@ def main(
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
     edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
-    _, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
+    _, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(nodes_path, edge_path)
 
     # create data
     data = create_data(features, edge_index)
