@@ -21,16 +21,19 @@ def create_node_ids_features_edge_index(nodes_path: str, pos_edge_path: str, neg
 
     # map node ids
     node_ids = {name: idx for idx, name in enumerate(node_df["node_id"])}
-    pos_source = pos_edge_df["source"].map(node_ids).tolist()
-    pos_target = pos_edge_df["target"].map(node_ids).tolist()
-    neg_source = neg_edge_df["source"].map(node_ids).tolist()
-    neg_target = neg_edge_df["target"].map(node_ids).tolist()
-
-    # create edge index
-    pos_edge = list(zip(pos_source, pos_target))
-    neg_edge = list(zip(neg_source, neg_target))
 
     # create labels (has edge or not)
+    pos_edge = [
+        [node_ids.get(row["source"]), node_ids.get(row["target"])]
+        for idx, row in pos_edge_df.iterrows()
+        if node_ids.get(row["source"]) is not None and node_ids.get(row["target"]) is not None
+    ]
+    neg_edge = [
+        [node_ids.get(row["source"]), node_ids.get(row["target"])]
+        for idx, row in neg_edge_df.iterrows()
+        if node_ids.get(row["source"]) is not None and node_ids.get(row["target"]) is not None
+    ]
+    # create edge index
     pos_edge_index = torch.tensor(pos_edge, dtype=torch.long).t().contiguous()
     neg_edge_index = torch.tensor(neg_edge, dtype=torch.long).t().contiguous()
 

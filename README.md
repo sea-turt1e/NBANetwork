@@ -23,7 +23,7 @@ Predict players who have never been on the same team before and have good chemis
 ### pipeline script
 You can run the pipeline script.
 ```
-sh pipeline.sh
+sh run_pipeline.sh
 ```
 
 ### pipeline steps

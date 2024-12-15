@@ -213,8 +213,8 @@ def player_network_dataset(
     # save edges with positive and negative signs
     edges = list(G.edges(data=True))
     # map node_id to index
-    node_id_to_index = {node_id: idx for idx, node_id in enumerate(G.nodes)}
-    edges = [(node_id_to_index[edge[0]], node_id_to_index[edge[1]], edge[2]) for edge in edges]
+    # node_id_to_index = {node_id: idx for idx, node_id in enumerate(G.nodes)}
+    # edges = [(node_id_to_index[edge[0]], node_id_to_index[edge[1]], edge[2]) for edge in edges]
     edges_df = pd.DataFrame(edges, columns=["source", "target", "sign"])
     pos_edges_df = edges_df[edges_df["sign"].map(lambda x: x["sign"]) == "positive"][["source", "target"]]
     neg_edges_df = edges_df[edges_df["sign"].map(lambda x: x["sign"]) == "negative"][["source", "target"]]
@@ -242,8 +242,6 @@ def increase_edges(
 
     import pandas as pd
 
-    from nbanetwork.utils import create_node_ids_features_edge_index
-
     nodes_path = nodes_input_dir / f"player_nodes_{year_from}-{year_until}.csv"
     pos_edge_path = edges_input_dir / f"player_edges_pos_{year_from}-{year_until}.csv"
     neg_edge_path = edges_input_dir / f"player_edges_neg_{year_from}-{year_until}.csv"
@@ -259,24 +257,30 @@ def increase_edges(
     if is_debug:
         pos_edges = pos_edges[:100]
 
-    pos_edges_set = set(tuple(edge) for edge in pos_edges.itertuples(index=False, name=None))
-    neg_edges_set = set(tuple(edge) for edge in neg_edges.itertuples(index=False, name=None))
+    pos_edges_list = pos_edges[["source", "target"]].values.tolist()
+    neg_edges_list = neg_edges[["source", "target"]].values.tolist()
 
     num_edges_increase = len(pos_edges) * 2 - len(neg_edges)
     print(f"num_edges_increase: {num_edges_increase}")
     if num_edges_increase > 0:
         for _ in tqdm(range(num_edges_increase), desc="Increasing negative samples"):
             i, j = random.randint(0, num_nodes - 1), random.randint(0, num_nodes - 1)
-            if (i, j) not in pos_edges_set and (i, j) not in neg_edges_set:
-                neg_edges_set.add((i, j))
+            # if edge does not exist
+            if [pos_edges_list[i][0], pos_edges_list[j][1]] not in pos_edges_list and [
+                neg_edges_list[i][0],
+                neg_edges_list[j][1],
+            ] not in neg_edges_list:
+                neg_edges_list.append([i, j])
     logger.info("Negative samples increased.")
     # save positive and negative samples
     with open(output_dir / f"players_pos_edge_{year_from}-{year_until}.txt", "w") as f:
-        for edge in pos_edges_set:
+        f.write("source,target\n")
+        for edge in pos_edges_list:
             f.write(f"{edge[0]},{edge[1]}\n")
 
     with open(output_dir / f"players_neg_edge_{year_from}-{year_until}.txt", "w") as f:
-        for edge in neg_edges_set:
+        f.write("source,target\n")
+        for edge in neg_edges_list:
             f.write(f"{edge[0]},{edge[1]}\n")
     logger.success("Positive and negative samples created.")
 

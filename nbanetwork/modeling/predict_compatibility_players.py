@@ -15,10 +15,12 @@ app = typer.Typer()
 @app.command()
 def main(
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
+    pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 2021,
     year_until: int = 2023,
     model_path: Path = MODELS_DIR / "gnn_model.pth",
     predictions_dir: Path = PROCESSED_DATA_DIR / "predictions",
+    is_debug: bool = False,
 ):
     import os
 
@@ -29,11 +31,21 @@ def main(
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    edge_path = node_edges_date_dir / f"player_edges_{year_from}-{year_until}.csv"
-    node_ids, features, edge_index = create_node_ids_features_edge_index(nodes_path, edge_path, is_train=False)
+    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
+    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+
+    node_ids, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
+        nodes_path, pos_edge_path, neg_edge_path, is_train=False
+    )
+
+    # create data
+    edge_index = torch.cat([pos_edge_index, neg_edge_index], dim=1)
 
     # create data
     data = create_data(features, edge_index)
+
+    # pos_edge = pos_edge_index.t().tolist()
+    # neg_edge = neg_edge_index.t().tolist()
 
     model = GCN(in_channels=features.shape[1], hidden_channels=64)
     model.load_state_dict(torch.load(model_path, weights_only=True))
