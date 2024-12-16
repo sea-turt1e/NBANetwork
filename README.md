@@ -5,6 +5,7 @@
 </a>
 
 NBA Network Analysis and Machine Learning
+e.g. train the relationships between players and predict the compatibility between players who have never been teammates.
 
 ## Environment
 ```
