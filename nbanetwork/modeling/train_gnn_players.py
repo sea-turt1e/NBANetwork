@@ -22,6 +22,7 @@ def main(
     is_debug: bool = False,
 ):
 
+    import matplotlib.pyplot as plt
     import torch
     from sklearn.metrics import roc_auc_score
     from sklearn.model_selection import train_test_split
@@ -98,9 +99,14 @@ def main(
     logger.info("Start training...")
     if is_debug:
         epochs = 300
+
+    train_losses = []
+    test_aucs = []
     for epoch in tqdm(range(epochs)):
         loss = train()
         auc = test()
+        train_losses.append(loss)
+        test_aucs.append(auc)
         # scheduler.step(auc)
         if epoch % 20 == 0:
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
@@ -109,6 +115,28 @@ def main(
     # save model
     torch.save(model.state_dict(), model_save_path)
     logger.success("Model saved.")
+
+    # plot results
+    plt.figure(figsize=(12, 5))
+
+    # Loss over Epochs
+    plt.subplot(1, 2, 1)
+    plt.plot(range(epochs), train_losses, label="Train Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss over Epochs")
+    plt.legend()
+
+    # AUC over Epochs
+    plt.subplot(1, 2, 2)
+    plt.plot(range(epochs), test_aucs, label="Test AUC", color="orange")
+    plt.xlabel("Epoch")
+    plt.ylabel("AUC")
+    plt.title("AUC over Epochs")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
