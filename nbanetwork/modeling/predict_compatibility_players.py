@@ -73,7 +73,7 @@ def main(
         score = torch.sigmoid((emb1 * emb2).sum()).item()
         return score
 
-    # Example: check compability
+    # Example: check compatibility
     e_p1 = "Stephen Curry_2009_7"
     e_p2 = "Rui Hachimura_2019_9"
     example_comptibility = predict_compatibility(e_p1, e_p2)
@@ -94,6 +94,8 @@ def main(
         reader = csv.reader(fr_common, delimiter=",")
         next(reader)
         common_players_name = [row[3] for row in reader]
+        if is_debug:
+            node_ids = {node[0]: node[1] for node in list(node_ids.items())[-10:]}
         for player1 in tqdm(node_ids):
             for player2 in node_ids:
                 if player1 != player2:

@@ -10,11 +10,14 @@ certifi==2024.8.30
 chardet==5.2.0
 charset-normalizer==3.4.0
 click==8.1.7
+contourpy==1.3.1
 cookiecutter==2.6.0
+cycler==0.12.1
 decorator==5.1.1
 executing==2.1.0
 filelock==3.16.1
 flake8==7.1.1
+fonttools==4.55.3
 frozenlist==1.5.0
 fsspec==2024.10.0
 ghp-import==2.1.0
@@ -26,10 +29,12 @@ jedi==0.19.2
 Jinja2==3.1.4
 joblib==1.4.2
 kagglehub==0.3.4
+kiwisolver==1.4.7
 loguru==0.7.3
 Markdown==3.7
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
+matplotlib==3.10.0
 matplotlib-inline==0.1.7
 mccabe==0.7.0
 mdurl==0.1.2
@@ -39,7 +44,7 @@ mkdocs-get-deps==0.2.0
 mpmath==1.3.0
 multidict==6.1.0
 mypy-extensions==1.0.0
--e git+ssh://git@github.com/sea-turt1e/NBANetwork.git@d97df1752a401c55237e818f6063f22a1efd8b5a#egg=nbanetwork
+-e git+ssh://git@github.com/sea-turt1e/NBANetwork.git@64a35b4b001dd6c1c827bf0187860692db4fabb8#egg=nbanetwork
 networkx==3.4.2
 numpy==2.2.0
 packaging==24.2
