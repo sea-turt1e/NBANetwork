@@ -122,6 +122,43 @@ def player_network_dataset(
     # Assign draft_number randomly between 61 and 90
     node_attributes["draft_number"] = node_attributes["draft_number"].replace("Undrafted", random.randint(61, 90))
 
+    # add node_attribute of plus_minus_home and plus_minus_away
+    with open(RAW_DATA_DIR / "nbadatabase/csv/game.csv") as f_game:
+        df_game = pd.read_csv(f_game)
+
+    # Add season to df_game. Get it from game_date. game_data is yyyy-mm-dd, so for example, 1996-10-01 to 1997-09-30 is 1996-97.
+    for i in tqdm(range(len(df_game)), desc="Adding season to game data"):
+        game_date = df_game["game_date"][i]
+        year = int(game_date.split("-")[0])
+        month = int(game_date.split("-")[1])
+        if month >= 10:
+            season = f"{year}-{str(year + 1)[-2:]}"
+        else:
+            season = f"{year - 1}-{str(year)[-2:]}"
+        df_game.loc[i, "season"] = season
+
+    plus_minus_home = df_game.groupby(["season", "team_abbreviation_home"])["plus_minus_home"].mean().reset_index()
+    plus_minus_away = df_game.groupby(["season", "team_abbreviation_away"])["plus_minus_away"].mean().reset_index()
+    # merge for plus_minus_home
+    node_attributes = pd.merge(
+        node_attributes,
+        plus_minus_home,
+        left_on=["season", "team_abbreviation"],
+        right_on=["season", "team_abbreviation_home"],
+        how="left",
+    )
+    node_attributes.drop("team_abbreviation_home", axis=1, inplace=True)  # Optional: Remove redundant column
+
+    # merge for plus_minus_away
+    node_attributes = pd.merge(
+        node_attributes,
+        plus_minus_away,
+        left_on=["season", "team_abbreviation"],
+        right_on=["season", "team_abbreviation_away"],
+        how="left",
+    )
+    node_attributes.drop("team_abbreviation_away", axis=1, inplace=True)  # Optional: Remove redundant column
+
     # Convert columns that can be converted to numbers
     numeric_columns = [
         "age",
@@ -140,6 +177,8 @@ def player_network_dataset(
         "usg_pct",
         "ts_pct",
         "ast_pct",
+        "plus_minus_home",
+        "plus_minus_away",
     ]
     for col in numeric_columns:
         node_attributes[col] = pd.to_numeric(node_attributes[col], errors="coerce")
