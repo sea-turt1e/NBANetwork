@@ -44,9 +44,6 @@ def main(
     # create data
     data = create_data(features, edge_index)
 
-    # pos_edge = pos_edge_index.t().tolist()
-    # neg_edge = neg_edge_index.t().tolist()
-
     model = GCN(in_channels=features.shape[1], hidden_channels=64)
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.eval()
