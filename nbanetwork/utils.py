@@ -48,7 +48,6 @@ def create_node_ids_features_edge_index(nodes_path: str, pos_edge_path: str, neg
     features = node_df[numerical_columns]
     # features = node_df[categorical_columns + numerical_columns]
     features = torch.tensor(features.values, dtype=torch.float)
-
     return node_ids, features, pos_edge_index, neg_edge_index
 
 
