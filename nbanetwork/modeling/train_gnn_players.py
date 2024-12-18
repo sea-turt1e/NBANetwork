@@ -55,7 +55,7 @@ def main(
     edges = pos_edge + neg_edge
     labels = [1] * len(pos_edge) + [0] * len(neg_edge)
     train_edges, test_edges, train_labels, test_labels = train_test_split(
-        edges, labels, test_size=0.2, random_state=42, shuffle=True
+        edges, labels, test_size=0.1, random_state=42, shuffle=True
     )
     train_edge_index = torch.tensor(train_edges, dtype=torch.long).t()
     train_labels = torch.tensor(train_labels, dtype=torch.float)
@@ -64,7 +64,8 @@ def main(
 
     # define model, optimizer, and loss
     model = GCN(in_channels=features.shape[1], hidden_channels=64)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", patience=10)
     criterion = torch.nn.BCEWithLogitsLoss()
 
     # training function
@@ -76,6 +77,7 @@ def main(
         # score of each edge
         src, dst = train_edge_index
         scores = (z[src] * z[dst]).sum(dim=1)
+        # scores = model.score(z, src, dst)
         loss = criterion(scores, train_labels)
         loss.backward()
         optimizer.step()
@@ -95,7 +97,6 @@ def main(
             return roc_auc_score(labels, preds)
 
     # training loop
-    # scheduler = ReduceLROnPlateau(optimizer, "max", patience=10)
     logger.info("Start training...")
     if is_debug:
         epochs = 300
@@ -107,7 +108,7 @@ def main(
         auc = test()
         train_losses.append(loss)
         test_aucs.append(auc)
-        # scheduler.step(auc)
+        scheduler.step(auc)
         if epoch % 20 == 0:
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
     logger.success("Training complete.")
