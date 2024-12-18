@@ -10,7 +10,10 @@ class GCN(torch.nn.Module):
         self.bn1 = torch.nn.BatchNorm1d(hidden_channels)
         self.conv2 = GCNConv(hidden_channels, hidden_channels)
         self.bn2 = torch.nn.BatchNorm1d(hidden_channels)
+        # self.conv3 = GCNConv(hidden_channels, hidden_channels)
+        # self.bn3 = torch.nn.BatchNorm1d(hidden_channels)
         self.dropout = dropout
+        # self.fc = torch.nn.Linear(hidden_channels, 1)
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
@@ -19,7 +22,16 @@ class GCN(torch.nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.conv2(x, edge_index)
         x = self.bn2(x)
+        # x = F.relu(x)
+        # x = F.dropout(x, p=self.dropout, training=self.training)
+        # x = self.conv3(x, edge_index)
+        # x = self.bn3(x)
         return x
+
+    # def score(self, z, src, dst):
+    #     edge_emb = z[src] * z[dst]
+    #     scores = self.fc(edge_emb).squeeze()
+    #     return scores
 
 
 class GAT(torch.nn.Module):
