@@ -75,7 +75,6 @@ def main(
 
         # エッジスコアの計算
         src, dst = train_edge_index
-        # scores = (z[src] * z[dst]).sum(dim=1)
         scores = model.score(z, src, dst)
         loss = criterion(scores, train_labels)
         loss.backward()
@@ -88,7 +87,7 @@ def main(
         with torch.no_grad():
             z = model(data.x, data.edge_index)
             src, dst = test_edge_index
-            scores = (z[src] * z[dst]).sum(dim=1)
+            scores = model.score(z, src, dst)
             preds = torch.sigmoid(scores)
             preds = preds.cpu()
             labels = test_labels.cpu()
