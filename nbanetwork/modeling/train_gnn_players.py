@@ -1,12 +1,17 @@
 from pathlib import Path
 
 import ipdb
+import matplotlib.pyplot as plt
+import torch
 import typer
 from loguru import logger
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
 from nbanetwork.modeling.gnn_models import GAT, GCN
+from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
 app = typer.Typer()
 
@@ -16,21 +21,14 @@ def main(
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 1996,
-    year_until: int = 2021,
+    year_until: int = 2022,
     model_save_path: Path = MODELS_DIR / "gnn_model.pth",
     epochs: int = 1000,
     is_debug: bool = False,
 ):
 
-    import matplotlib.pyplot as plt
-    import torch
-    from sklearn.metrics import roc_auc_score
-    from sklearn.model_selection import train_test_split
-
-    from nbanetwork.utils import create_data, create_node_ids_features_edge_index
-
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+    pos_edge_path = pos_neg_edges_dir / f"player_edges_pos_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"player_edges_neg_{year_from}-{year_until}.csv"
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
@@ -63,10 +61,11 @@ def main(
     test_labels = torch.tensor(test_labels, dtype=torch.float)
 
     # define model, optimizer, and loss
-    model = GCN(in_channels=features.shape[1], hidden_channels=64)
+    model = GAT(in_channels=features.shape[1], hidden_channels=64)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", patience=10)
-    criterion = torch.nn.BCEWithLogitsLoss()
+    pos_weight = torch.tensor([len(neg_edge) / len(pos_edge)], dtype=torch.float)
+    criterion = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     # training function
     def train():
@@ -74,7 +73,7 @@ def main(
         optimizer.zero_grad()
         z = model(data.x, data.edge_index)
 
-        # score of each edge
+        # エッジスコアの計算
         src, dst = train_edge_index
         scores = (z[src] * z[dst]).sum(dim=1)
         # scores = model.score(z, src, dst)

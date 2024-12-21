@@ -16,7 +16,7 @@ app = typer.Typer()
 def main(
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
-    year_from: int = 2021,
+    year_from: int = 2022,
     year_until: int = 2023,
     model_path: Path = MODELS_DIR / "gnn_model.pth",
     predictions_dir: Path = PROCESSED_DATA_DIR / "predictions",
@@ -31,8 +31,8 @@ def main(
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.csv"
 
     node_ids, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
         nodes_path, pos_edge_path, neg_edge_path, is_train=False
@@ -54,8 +54,8 @@ def main(
 
     node_df = pd.read_csv(nodes_path)
 
-    # define function to predict compatibility
-    def predict_compatibility(player1, player2):
+    # define function to predict chemistry
+    def predict_chemistry(player1, player2):
         # if player1 and player2 are in same team
         player1_team = node_df[node_df["node_id"] == player1]["team_abbreviation"].values[0]
         player2_team = node_df[node_df["node_id"] == player2]["team_abbreviation"].values[0]
@@ -70,15 +70,15 @@ def main(
         score = torch.sigmoid((emb1 * emb2).sum()).item()
         return score
 
-    # Example: check compatibility
+    # Example: check chemistry
     e_p1 = "Stephen Curry_2009_7"
     e_p2 = "Rui Hachimura_2019_9"
-    example_comptibility = predict_compatibility(e_p1, e_p2)
-    print(f'Example: Compatibility between "{e_p1}" and "{e_p2}" is {example_comptibility}')
+    example_comptibility = predict_chemistry(e_p1, e_p2)
+    print(f'Example: Chemistry between "{e_p1}" and "{e_p2}" is {example_comptibility}')
 
     # save predictions
-    predictions_path = predictions_dir / f"compatibility_{year_from}-{year_until}.csv"
-    prediction_common_player_path = predictions_dir / f"compatibility_common_player_{year_from}-{year_until}.csv"
+    predictions_path = predictions_dir / f"chemistry_{year_from}-{year_until}.csv"
+    prediction_common_player_path = predictions_dir / f"chemistry_common_player_{year_from}-{year_until}.csv"
     if not os.path.exists(predictions_dir):
         os.makedirs(predictions_dir)
     with (
@@ -96,7 +96,7 @@ def main(
         for player1 in tqdm(node_ids):
             for player2 in node_ids:
                 if player1 != player2:
-                    score = predict_compatibility(player1, player2)
+                    score = predict_chemistry(player1, player2)
                     fw_all.write(f"{player1},{player2},{score}\n")
                     if {player1[:-8], player2[:-8]} & set(common_players_name):
                         fw_common.write(f"{player1},{player2},{score}\n")

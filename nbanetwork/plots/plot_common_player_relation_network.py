@@ -23,7 +23,7 @@ def main(
     prediction_dir: Path = PROCESSED_DATA_DIR / "predictions",
     model_path: Path = MODELS_DIR / "gnn_model.pth",
     output_plot_dir: Path = PROCESSED_DATA_DIR / "plots",
-    year_from: int = 2021,
+    year_from: int = 2022,
     year_until: int = 2023,
 ):
 
@@ -34,8 +34,8 @@ def main(
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.csv"
 
     node_ids, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
         nodes_path, pos_edge_path, neg_edge_path, is_train=False
@@ -60,8 +60,8 @@ def main(
 
     node_df = pd.read_csv(nodes_path)
 
-    # define function to predict compatibility
-    def predict_compatibility(player1, player2):
+    # define function to predict chemistry
+    def predict_chemistry(player1, player2):
         # if player1 and player2 are in same team
         player1_team = node_df[node_df["node_id"] == player1]["team_abbreviation"].values[0]
         player2_team = node_df[node_df["node_id"] == player2]["team_abbreviation"].values[0]
@@ -89,16 +89,16 @@ def main(
     ]
 
     players_relation = []
-    # predict compatibility for each pair of common players
+    # predict chemistry for each pair of common players
     for i in range(len(common_players_name)):
         for j in range(i + 1, len(common_players_name)):
             player1 = common_players_name[i]
             player2 = common_players_name[j]
-            compatibility = predict_compatibility(player1, player2)
-            players_relation.append([player1, player2, compatibility])
+            chemistry = predict_chemistry(player1, player2)
+            players_relation.append([player1, player2, chemistry])
 
-    # visualize compatibility network
-    logger.info("Visualizing compatibility network...")
+    # visualize chemistry network
+    logger.info("Visualizing chemistry network...")
     G = nx.Graph()
     for row in players_relation:
         G.add_edge(row[0], row[1], weight=round(float(row[2]), 3))
@@ -136,7 +136,7 @@ def main(
 
     plt.axis("off")  # Hide axes for a cleaner look
     plt.tight_layout()  # Adjust subplot params for better layout
-    plt.savefig(output_plot_dir / "compatibility_network.png", dpi=300)
+    plt.savefig(output_plot_dir / "chemistry_network.png", dpi=300)
     plt.show()
 
 
