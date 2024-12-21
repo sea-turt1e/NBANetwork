@@ -8,12 +8,16 @@ class GCN(torch.nn.Module):
         super(GCN, self).__init__()
         self.conv1 = GCNConv(in_channels, hidden_channels)
         self.bn1 = torch.nn.BatchNorm1d(hidden_channels)
-        self.conv2 = GCNConv(hidden_channels, hidden_channels)
-        self.bn2 = torch.nn.BatchNorm1d(hidden_channels)
-        # self.conv3 = GCNConv(hidden_channels, hidden_channels)
-        # self.bn3 = torch.nn.BatchNorm1d(hidden_channels)
+        self.conv2 = GCNConv(hidden_channels, hidden_channels * 2)
+        self.bn2 = torch.nn.BatchNorm1d(hidden_channels * 2)
+        self.conv3 = GCNConv(hidden_channels * 2, hidden_channels * 2)
+        self.bn3 = torch.nn.BatchNorm1d(hidden_channels * 2)
         self.dropout = dropout
-        # self.fc = torch.nn.Linear(hidden_channels, 1)
+        self.fc = torch.nn.Sequential(
+            torch.nn.Linear(hidden_channels * 4, hidden_channels * 2),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_channels * 2, 1),
+        )
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
@@ -22,16 +26,17 @@ class GCN(torch.nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.conv2(x, edge_index)
         x = self.bn2(x)
-        # x = F.relu(x)
-        # x = F.dropout(x, p=self.dropout, training=self.training)
-        # x = self.conv3(x, edge_index)
-        # x = self.bn3(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv3(x, edge_index)
+        x = self.bn3(x)
+        x = F.relu(x)
         return x
 
-    # def score(self, z, src, dst):
-    #     edge_emb = z[src] * z[dst]
-    #     scores = self.fc(edge_emb).squeeze()
-    #     return scores
+    def score(self, z, src, dst):
+        edge_emb = torch.cat([z[src], z[dst]], dim=1)
+        scores = self.fc(edge_emb).squeeze()
+        return scores
 
 
 class GAT(torch.nn.Module):
