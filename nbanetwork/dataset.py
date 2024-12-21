@@ -205,20 +205,6 @@ def player_network_dataset(
     for _, row in node_attributes.iterrows():
         G.add_node(row["node_id"], **row.to_dict())
 
-    with open(RAW_DATA_DIR / "nbadatabase/csv/game.csv") as f_game:
-        df_game = pd.read_csv(f_game)
-
-    # Add season to df_game. Get it from game_date. game_data is yyyy-mm-dd, so for example, 1996-10-01 to 1997-09-30 is 1996-97.
-    for i in tqdm(range(len(df_game)), desc="Adding season to game data"):
-        game_date = df_game["game_date"][i]
-        year = int(game_date.split("-")[0])
-        month = int(game_date.split("-")[1])
-        if month >= 10:
-            season = f"{year}-{str(year + 1)[-2:]}"
-        else:
-            season = f"{year - 1}-{str(year)[-2:]}"
-        df_game.loc[i, "season"] = season
-
     # get plus_minus_home and plus_minus_away
     plus_minus_home = df_game.groupby(["season", "team_abbreviation_home"])["plus_minus_home"].mean().reset_index()
     plus_minus_away = df_game.groupby(["season", "team_abbreviation_away"])["plus_minus_away"].mean().reset_index()
@@ -229,7 +215,7 @@ def player_network_dataset(
         teams = season_data["team_abbreviation"].unique()
         for team in teams:
             team_players = season_data[season_data["team_abbreviation"] == team]["node_id"].tolist()
-            # add edges between players in the same team
+            # add pos edges if plus_minus > 0, else add neg edges
             for i in range(len(team_players)):
                 for j in range(i + 1, len(team_players)):
                     team_plus_minus_home = float(
