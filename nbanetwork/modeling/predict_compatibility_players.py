@@ -54,8 +54,8 @@ def main(
 
     node_df = pd.read_csv(nodes_path)
 
-    # define function to predict compatibility
-    def predict_compatibility(player1, player2):
+    # define function to predict chemistry
+    def predict_chemistry(player1, player2):
         # if player1 and player2 are in same team
         player1_team = node_df[node_df["node_id"] == player1]["team_abbreviation"].values[0]
         player2_team = node_df[node_df["node_id"] == player2]["team_abbreviation"].values[0]
@@ -70,15 +70,15 @@ def main(
         score = torch.sigmoid((emb1 * emb2).sum()).item()
         return score
 
-    # Example: check compatibility
+    # Example: check chemistry
     e_p1 = "Stephen Curry_2009_7"
     e_p2 = "Rui Hachimura_2019_9"
-    example_comptibility = predict_compatibility(e_p1, e_p2)
-    print(f'Example: Compatibility between "{e_p1}" and "{e_p2}" is {example_comptibility}')
+    example_comptibility = predict_chemistry(e_p1, e_p2)
+    print(f'Example: Chemistry between "{e_p1}" and "{e_p2}" is {example_comptibility}')
 
     # save predictions
-    predictions_path = predictions_dir / f"compatibility_{year_from}-{year_until}.csv"
-    prediction_common_player_path = predictions_dir / f"compatibility_common_player_{year_from}-{year_until}.csv"
+    predictions_path = predictions_dir / f"chemistry_{year_from}-{year_until}.csv"
+    prediction_common_player_path = predictions_dir / f"chemistry_common_player_{year_from}-{year_until}.csv"
     if not os.path.exists(predictions_dir):
         os.makedirs(predictions_dir)
     with (
@@ -96,7 +96,7 @@ def main(
         for player1 in tqdm(node_ids):
             for player2 in node_ids:
                 if player1 != player2:
-                    score = predict_compatibility(player1, player2)
+                    score = predict_chemistry(player1, player2)
                     fw_all.write(f"{player1},{player2},{score}\n")
                     if {player1[:-8], player2[:-8]} & set(common_players_name):
                         fw_common.write(f"{player1},{player2},{score}\n")
