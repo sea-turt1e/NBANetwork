@@ -77,23 +77,21 @@ def main(
         return score
 
     # pick up common players from the prediction file
-    common_players_name = [
-        "Kevin Durant_2007_2",
+    pickup_players_name = [
         "Stephen Curry_2009_7",
         "James Harden_2009_3",
         "Jimmy Butler_2011_30",
-        "Kyle Lowry_2006_24",
         "Nikola Jokic_2014_41",
         "Rui Hachimura_2019_9",
-        "Kentavious Caldwell-Pope_2013_8",
+        "Kawhi Leonard_2011_15",
     ]
 
     players_relation = []
     # predict chemistry for each pair of common players
-    for i in range(len(common_players_name)):
-        for j in range(i + 1, len(common_players_name)):
-            player1 = common_players_name[i]
-            player2 = common_players_name[j]
+    for i in range(len(pickup_players_name)):
+        for j in range(i + 1, len(pickup_players_name)):
+            player1 = pickup_players_name[i]
+            player2 = pickup_players_name[j]
             chemistry = predict_chemistry(player1, player2)
             players_relation.append([player1, player2, chemistry])
 
@@ -121,6 +119,8 @@ def main(
     red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.95 and d["weight"] <= 1.0]
     black_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.30 and d["weight"] <= 0.95]
     blue_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] <= 0.30]
+    # If 99, don't draw edge label
+    edge_labels = {(u, v): f"{d['weight']:.2f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 99}
 
     # Draw edges
     nx.draw_networkx_edges(G, pos, edgelist=red_edges, edge_color="r", width=2)
