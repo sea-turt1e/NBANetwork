@@ -82,7 +82,7 @@ def main(
         "James Harden_2009_3",
         "Jimmy Butler_2011_30",
         "Nikola Jokic_2014_41",
-        "LeBron James_2003_1",
+        "Rui Hachimura_2019_9",
         "Kawhi Leonard_2011_15",
     ]
 
