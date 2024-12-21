@@ -61,7 +61,7 @@ def main(
     test_labels = torch.tensor(test_labels, dtype=torch.float)
 
     # define model, optimizer, and loss
-    model = GAT(in_channels=features.shape[1], hidden_channels=64)
+    model = GCN(in_channels=features.shape[1], hidden_channels=64)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", patience=10)
     pos_weight = torch.tensor([len(neg_edge) / len(pos_edge)], dtype=torch.float)
@@ -75,8 +75,8 @@ def main(
 
         # エッジスコアの計算
         src, dst = train_edge_index
-        scores = (z[src] * z[dst]).sum(dim=1)
-        # scores = model.score(z, src, dst)
+        # scores = (z[src] * z[dst]).sum(dim=1)
+        scores = model.score(z, src, dst)
         loss = criterion(scores, train_labels)
         loss.backward()
         optimizer.step()

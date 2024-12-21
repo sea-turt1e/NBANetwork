@@ -34,8 +34,8 @@ def main(
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.csv"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.csv"
+    pos_edge_path = pos_neg_edges_dir / f"player_edges_pos_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"player_edges_neg_{year_from}-{year_until}.csv"
 
     node_ids, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
         nodes_path, pos_edge_path, neg_edge_path, is_train=False
@@ -118,7 +118,7 @@ def main(
     # nx.draw_networkx_edges(G, pos, alpha=0.5)
 
     # If weight is higher than 0.95, draw edge label with red color
-    red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.95]
+    red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.95 and d["weight"] <= 1.0]
     black_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.30 and d["weight"] <= 0.95]
     blue_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] <= 0.30]
 

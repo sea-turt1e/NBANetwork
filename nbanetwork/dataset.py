@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import ipdb
@@ -260,6 +261,7 @@ def increase_edges(
     output_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 1996,
     year_until: int = 2022,
+    edge_ratio: float = 1.0,  # ratio of negative samples to positive samples
     is_train: bool = True,
     is_debug: bool = False,
 ):
@@ -285,25 +287,37 @@ def increase_edges(
     pos_edges_list = pos_edges[["source", "target"]].values.tolist()
     neg_edges_list = neg_edges[["source", "target"]].values.tolist()
 
-    num_edges_increase = len(pos_edges) * 2 - len(neg_edges)
-    print(f"num_edges_increase: {num_edges_increase}")
-    if num_edges_increase > 0:
-        for _ in tqdm(range(num_edges_increase), desc="Increasing negative samples"):
+    num_neg_edges_increase = int(len(pos_edges) * edge_ratio - len(neg_edges))
+    print(f"num_edges_increase: {num_neg_edges_increase}")
+    num_while = 0
+    num_neg_edges = 0
+    # save positive and negative samples
+    output_pos_edge_path = str(output_dir) + "/" + os.path.basename(pos_edge_path)
+    output_neg_edge_path = str(output_dir) + "/" + os.path.basename(neg_edge_path)
+    # convert list to set for faster search
+    pos_edges_set = set(tuple(edge) for edge in pos_edges_list)
+    neg_edges_set = set(tuple(edge) for edge in neg_edges_list)
+    with tqdm() as pbar:
+        while num_neg_edges < num_neg_edges_increase:
             i, j = random.randint(0, num_nodes - 1), random.randint(0, num_nodes - 1)
             # if edge does not exist
-            if [pos_edges_list[i][0], pos_edges_list[j][1]] not in pos_edges_list and [
-                neg_edges_list[i][0],
-                neg_edges_list[j][1],
-            ] not in neg_edges_list:
-                neg_edges_list.append([i, j])
+            if i == j:
+                player1 = node_df.iloc[i]["node_id"]
+                player2 = node_df.iloc[j]["node_id"]
+                if (player1, player2) not in (pos_edges_set | neg_edges_set):
+                    neg_edges_list.append([player1, player2])
+                    num_neg_edges += 1
+                    pbar.update(1)
+                num_while += 1
+            if num_while > num_neg_edges_increase * 10:
+                logger.error("too many while loops.")
+                break
     logger.info("Negative samples increased.")
-    # save positive and negative samples
-    with open(output_dir / f"player_edges_pos_{year_from}-{year_until}.csv", "w") as f:
+    with open(output_pos_edge_path, "w") as f:
         f.write("source,target\n")
         for edge in pos_edges_list:
             f.write(f"{edge[0]},{edge[1]}\n")
-
-    with open(output_dir / f"player_edges_neg_{year_from}-{year_until}.csv", "w") as f:
+    with open(output_neg_edge_path, "w") as f:
         f.write("source,target\n")
         for edge in neg_edges_list:
             f.write(f"{edge[0]},{edge[1]}\n")
