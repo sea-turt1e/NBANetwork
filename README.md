@@ -5,7 +5,7 @@
 </a>
 
 NBA Network Analysis and Machine Learning
-e.g. train the relationships between players and predict the compatibility between players who have never been teammates.
+e.g. train the relationships between players and predict the chemistry between players who have never been teammates.
 
 ## Environment
 ```
@@ -18,13 +18,13 @@ macOS
 pip install -r requirements.txt
 ```
 
-## Players Network
+## Players Chemistry Network
 Predict players who have never been on the same team before and have good chemistry.
 
 ### pipeline script
 You can run the pipeline script.
 ```
-sh run_pipeline.sh
+scripts/player_chemistry/pipeline_player_chemistry.sh
 ```
 
 ### pipeline steps
