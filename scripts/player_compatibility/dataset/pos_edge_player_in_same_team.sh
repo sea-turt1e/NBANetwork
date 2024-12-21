@@ -2,7 +2,7 @@
 
 # default variables
 year_from=1996
-year_until=2021
+year_until=2022
 year_last=2023
 is_debug=""
 

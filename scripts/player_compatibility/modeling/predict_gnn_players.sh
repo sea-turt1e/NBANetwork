@@ -2,7 +2,7 @@
 
 # default values
 # variables of year
-year_from=2021
+year_from=2022
 year_until=2023
 predictions_dir="./data/processed/predictions"
 
