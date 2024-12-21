@@ -14,10 +14,10 @@ def create_node_ids_features_edge_index(nodes_path: str, pos_edge_path: str, neg
     pos_edge_df = pd.read_csv(pos_edge_path)
     neg_edge_df = pd.read_csv(neg_edge_path)
     # sfuhhle if is_train=True.
-    if is_train:
-        node_df = node_df.sample(frac=1).reset_index(drop=True)
-        pos_edge_df = pos_edge_df.sample(frac=1).reset_index(drop=True)
-        neg_edge_df = neg_edge_df.sample(frac=1).reset_index(drop=True)
+    # if is_train:
+    #     node_df = node_df.sample(frac=1).reset_index(drop=True)
+    #     pos_edge_df = pos_edge_df.sample(frac=1).reset_index(drop=True)
+    #     neg_edge_df = neg_edge_df.sample(frac=1).reset_index(drop=True)
 
     # map node ids
     node_ids = {name: idx for idx, name in enumerate(node_df["node_id"])}
@@ -40,11 +40,11 @@ def create_node_ids_features_edge_index(nodes_path: str, pos_edge_path: str, neg
     # create features
     drop_node_df_columns = ["node_id", "player_name"]
     node_df = node_df.drop(drop_node_df_columns, axis=1)
-    categorical_columns = ["team_abbreviation", "college", "country", "season"]
-    # for col in categorical_columns:
+    drop_columns = ["team_abbreviation", "college", "country", "season", "draft_year", "draft_round"]
+    # for col in drop_columns:
     #     node_df[col] = node_df[col].astype("category").cat.codes
 
-    numerical_columns = [col for col in node_df.columns if col not in categorical_columns]
+    numerical_columns = [col for col in node_df.columns if col not in drop_columns]
     features = node_df[numerical_columns]
     # features = node_df[categorical_columns + numerical_columns]
     features = torch.tensor(features.values, dtype=torch.float)
