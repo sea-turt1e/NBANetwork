@@ -1,12 +1,17 @@
 from pathlib import Path
 
 import ipdb
+import matplotlib.pyplot as plt
+import torch
 import typer
 from loguru import logger
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
 from nbanetwork.modeling.gnn_models import GAT, GCN
+from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
 app = typer.Typer()
 
@@ -22,15 +27,8 @@ def main(
     is_debug: bool = False,
 ):
 
-    import matplotlib.pyplot as plt
-    import torch
-    from sklearn.metrics import roc_auc_score
-    from sklearn.model_selection import train_test_split
-
-    from nbanetwork.utils import create_data, create_node_ids_features_edge_index
-
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+    pos_edge_path = pos_neg_edges_dir / f"player_edges_pos_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"player_edges_neg_{year_from}-{year_until}.csv"
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
