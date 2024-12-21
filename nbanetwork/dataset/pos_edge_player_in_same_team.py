@@ -20,7 +20,7 @@ def main(
     node_input_dir: Path = PROCESSED_DATA_DIR / "players",
     edge_output_dir: Path = INTERIM_DATA_DIR / "players",
     year_from: int = 1996,
-    year_until: int = 2021,
+    year_until: int = 2022,
     is_debug: bool = False,
 ):
 

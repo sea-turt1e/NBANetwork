@@ -33,7 +33,7 @@ def download_from_kaggle_hub(
 def split_dataset(
     input_path: Path = RAW_DATA_DIR / "players" / "all_seasons.csv",
     output_dir: Path = INTERIM_DATA_DIR / "players",
-    test_year_from: int = 2021,
+    test_year_from: int = 2022,
     final_data_year: int = 2023,
 ):
     import os
@@ -61,7 +61,7 @@ def player_network_dataset(
     node_output_dir: Path = PROCESSED_DATA_DIR / "players",
     edge_output_dir: Path = INTERIM_DATA_DIR / "players",
     year_from: int = 1996,
-    year_until: int = 2021,
+    year_until: int = 2022,
     is_debug: bool = False,
 ):
     import os
@@ -259,7 +259,7 @@ def increase_edges(
     edges_input_dir: Path = INTERIM_DATA_DIR / "players",
     output_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 1996,
-    year_until: int = 2021,
+    year_until: int = 2022,
     is_train: bool = True,
     is_debug: bool = False,
 ):
@@ -298,12 +298,12 @@ def increase_edges(
                 neg_edges_list.append([i, j])
     logger.info("Negative samples increased.")
     # save positive and negative samples
-    with open(output_dir / f"players_pos_edge_{year_from}-{year_until}.txt", "w") as f:
+    with open(output_dir / f"player_edges_pos_{year_from}-{year_until}.csv", "w") as f:
         f.write("source,target\n")
         for edge in pos_edges_list:
             f.write(f"{edge[0]},{edge[1]}\n")
 
-    with open(output_dir / f"players_neg_edge_{year_from}-{year_until}.txt", "w") as f:
+    with open(output_dir / f"player_edges_neg_{year_from}-{year_until}.csv", "w") as f:
         f.write("source,target\n")
         for edge in neg_edges_list:
             f.write(f"{edge[0]},{edge[1]}\n")

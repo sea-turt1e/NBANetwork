@@ -23,7 +23,7 @@ def main(
     prediction_dir: Path = PROCESSED_DATA_DIR / "predictions",
     model_path: Path = MODELS_DIR / "gnn_model.pth",
     output_plot_dir: Path = PROCESSED_DATA_DIR / "plots",
-    year_from: int = 2021,
+    year_from: int = 2022,
     year_until: int = 2023,
 ):
 
@@ -34,8 +34,8 @@ def main(
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.txt"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.txt"
+    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.csv"
 
     node_ids, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
         nodes_path, pos_edge_path, neg_edge_path, is_train=False
