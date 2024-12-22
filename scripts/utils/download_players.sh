@@ -1,8 +1,10 @@
 #!/bin/bash
 
-PROJECT_DIR="./"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR" && pwd)"
 RAW_DATA_DIR="$PROJECT_DIR/data/raw"
-
+echo "Project directory: $PROJECT_DIR"
+echo "Raw data directory: $RAW_DATA_DIR"
 # download database
 typer nbanetwork/dataset.py run download_from_kaggle_hub justinas/nba-players-data
 

@@ -21,7 +21,7 @@ def download_from_kaggle_hub(
     import kagglehub
 
     logger.info("Downloading dataset from Kaggle Hub...")
-    print(str(output_path))
+    print("output_path", str(output_path))
     path = kagglehub.dataset_download(str(hub_path))
     print("Path to dataset files:", path)
     # output_pathへのコピー処理を追加
