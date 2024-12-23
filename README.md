@@ -63,25 +63,26 @@ sh scripts/player_chemistry/pipeline_player_chemistry.sh
 ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
 │   └── figures        <- Generated graphics and figures to be used in reporting
 │
+├── scripts            <- Scripts to run the pipeline 
+│
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
 │
-├── setup.cfg          <- Configuration file for flake8
+├── setup.cfg          <- Configuration file for flake8 
 │
 └── nbanetwork   <- Source code for use in this project.
+    │
+    ├── modeling                <- Scripts to train models and then use trained models to make predictions
+    │
+    ├── dataset                 <- Scripts to download or generate data
     │
     ├── __init__.py             <- Makes nbanetwork a Python module
     │
     ├── config.py               <- Store useful variables and configuration
     │
-    ├── dataset.py              <- Scripts to download or generate data
-    │
     ├── features.py             <- Code to create features for modeling
-    │
-    ├── modeling                
-    │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models          
-    │   └── train.py            <- Code to train models
+    │   
+    ├── utils.py                <- Utility functions
     │
     └── plots.py                <- Code to create visualizations
 ```
