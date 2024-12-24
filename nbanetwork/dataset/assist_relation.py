@@ -20,17 +20,35 @@ def main(
 ):
 
     # read csv
-    df = pd.read_csv(input_path)
     if is_debug:
-        df = df.sample(1000)
+        df = pd.read_csv(input_path, nrows=10000)
+    else:
+        df = pd.read_csv(input_path)
     # filter data
     assist_data = df[df["homedescription"].str.contains(r"\(\w+ \d+ AST\)", na=False)]
 
+    def season(row):
+        if row["game_date"][5:7] <= "09":
+            return f"{int(row['game_date'][:4]) - 1}-{row['game_date'][2:4]}"
+        else:
+            return f"{row['game_date'][:4]}-{int(row['game_date'][2:4]) + 1}"
+
+    # season data with game info
+    with open(RAW_DATA_DIR / "nbadatabase" / "csv" / "game_info.csv", "r") as f:
+        game_info = pd.read_csv(f)
+        game_info["season"] = game_info.apply(season, axis=1)
+
+    num = 0
+
     # function to extract assist information
     def extract_assist_info(row):
+        nonlocal num
         match = re.search(r"(?P<shottype>.+?)\((\w+ \d+ AST)\)", row["homedescription"])
         if match:
-            # assister = match.group(1).split()[0]  # player who made the assist
+            try:
+                season = game_info[game_info["game_id"] == row["game_id"]]["season"].values[0]
+            except IndexError:
+                season = None
             return pd.Series(
                 {
                     "game_id": row["game_id"],  # game id
@@ -41,14 +59,17 @@ def main(
                     "assister_team_abbreviation": row["player2_team_abbreviation"],  # team of the assister
                     "assister_position": row["person2type"],
                     "shot_type": match.group("shottype"),  # type of shot
+                    "season": season,
                 }
             )
 
     # apply the function to each row
-    assist_info = assist_data.apply(extract_assist_info, axis=1)
+    tqdm.pandas(desc="Extracting assist info")
+    assist_info = assist_data.progress_apply(extract_assist_info, axis=1)
+    print(f"{num=}")
 
     with open(output_path, "w") as f:
         f.write(
-            "game_id,player,player_team_abbreviation,player1_position,assister,assister_team_abbreviation,assister_position,shot_type\n"
+            "game_id,player,player_team_abbreviation,player1_position,assister,assister_team_abbreviation,assister_position,shot_type,season\n"
         )
         assist_info.to_csv(f, header=False, index=False)
