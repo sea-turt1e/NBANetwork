@@ -19,18 +19,19 @@ class GCN(torch.nn.Module):
             torch.nn.Linear(hidden_channels * 2, 1),
         )
 
-    def forward(self, x, edge_index):
-        x = self.conv1(x, edge_index)
+    def forward(self, x, edge_index, edge_weight=None):
+        x = self.conv1(x, edge_index, edge_weight)
+        x = F.relu(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.bn1(x)
+        x = self.conv2(x, edge_index, edge_weight)
         x = F.relu(x)
         x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.conv2(x, edge_index)
         x = self.bn2(x)
+        x = self.conv3(x, edge_index, edge_weight)
         x = F.relu(x)
         x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.conv3(x, edge_index)
         x = self.bn3(x)
-        x = F.relu(x)
         return x
 
     def score(self, z, src, dst):
