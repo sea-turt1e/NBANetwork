@@ -1,13 +1,17 @@
 import csv
+import os
 from pathlib import Path
 
 import ipdb
+import pandas as pd
+import torch
 import typer
 from loguru import logger
 from tqdm import tqdm
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
 from nbanetwork.modeling.gnn_models import GCN
+from nbanetwork.utils import create_data, create_node_ids_features_edge_index_with_weight
 
 app = typer.Typer()
 
@@ -18,26 +22,19 @@ def main(
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 2022,
     year_until: int = 2023,
-    model_path: Path = MODELS_DIR / "gnn_model.pth",
+    model_path: Path = MODELS_DIR / "gnn_model_assist.pth",
     predictions_dir: Path = PROCESSED_DATA_DIR / "predictions",
     is_debug: bool = False,
 ):
-    import os
-
-    import pandas as pd
-    import torch
-
-    from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
-    pos_edge_path = pos_neg_edges_dir / f"players_pos_edge_{year_from}-{year_until}.csv"
-    neg_edge_path = pos_neg_edges_dir / f"players_neg_edge_{year_from}-{year_until}.csv"
+    pos_edge_path = pos_neg_edges_dir / f"assist_edges_pos_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"assist_edges_neg_{year_from}-{year_until}.csv"
 
-    node_ids, features, pos_edge_index, neg_edge_index = create_node_ids_features_edge_index(
-        nodes_path, pos_edge_path, neg_edge_path, is_train=False
+    node_ids, features, pos_edge_index, neg_edge_index, pos_weights, neg_weights = (
+        create_node_ids_features_edge_index_with_weight(nodes_path, pos_edge_path, neg_edge_path, is_train=False)
     )
-
     # create data
     edge_index = torch.cat([pos_edge_index, neg_edge_index], dim=1)
 
