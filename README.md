@@ -25,7 +25,7 @@ Predict players who have never been on the same team before and have good chemis
 ### pipeline script
 You can run the pipeline script.
 ```
-sh scripts/player_chemistry/pipeline_player_chemistry.sh 
+sh scripts/player_chemistry/pipeline_player_chemistry_by_assists.sh
 ```
 
 ### pipeline steps
@@ -33,6 +33,16 @@ sh scripts/player_chemistry/pipeline_player_chemistry.sh
 - preprocess the data
 - train the model
 - predict the players who have never been on the same team before and have good chemistry.
+
+### network visualization
+You will get the image of the network visualization of the players who have good chemistry like below.
+![player_network_by_assist](images/player_chemistry_network_by_assist20241226.png)  
+
+Description:
+- player nodes: playerName_hisDraftYear_hisDraftPick
+- <span style="color: red; ">Red edges</span>: players who could have high chemistry.
+- black edges: players who could have medium chemistry.
+- <span style="color:#0066FF;">Blue edges</span>: players who could have low chemistry.
 
 
 ## Project Organization
