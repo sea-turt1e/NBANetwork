@@ -33,15 +33,28 @@ while [ "$#" -gt 0 ]; do
 done
 
 # split dataset into train and test
-typer nbanetwork/dataset.py run split_dataset --test-year-from $year_until --final-data-year $year_last
+typer nbanetwork/dataset/split_dataset.py run --test-year-from $year_until --final-data-year $year_last
 
-# make train_dataset
-typer nbanetwork/dataset.py run player_network_dataset --year-from $year_from --year-until $year_until $is_debug
-# make test_dataset
-typer nbanetwork/dataset.py run player_network_dataset --year-from $year_until --year-until $year_last $is_debug
+# make assist relation dataset
+typer nbanetwork/dataset/make_assist_relation_data.py run
 
-# make positive and negative edge train dataset
-typer nbanetwork/dataset.py run increase_edges --year-from $year_from --year-until $year_until $is_debug
-# make positive and negative edge test dataset
-typer nbanetwork/dataset.py run increase_edges --year-from $year_until --year-until $year_last $is_debug
+# make nodes_dataset for train and test
+typer nbanetwork/dataset/make_player_nodes.py run --year-from $year_from --year-until $year_until $is_debug
+typer nbanetwork/dataset/make_player_nodes.py run --year-from $year_until --year-until $year_last $is_debug
 
+# make pos_edge_player_with_assists dataset for train and test
+typer nbanetwork/dataset/pos_edge_player_with_assists.py run --year-from $year_from --year-until $year_until
+typer nbanetwork/dataset/pos_edge_player_with_assists.py run --year-from $year_until --year-until $year_last
+
+# increase the number of edge samples
+typer nbanetwork/dataset/increase_edge_by_assist.py run \
+data/processed/players/player_nodes_${year_from}-${year_until}.csv \
+data/interim/players/assist_edges_pos_${year_from}-${year_until}.csv \
+data/interim/players/assist_edges_neg_${year_from}-${year_until}.csv \
+data/processed/players
+
+typer nbanetwork/dataset/increase_edge_by_assist.py run \
+data/processed/players/player_nodes_${year_until}-${year_last}.csv \
+data/interim/players/assist_edges_pos_${year_until}-${year_last}.csv \
+data/interim/players/assist_edges_neg_${year_until}-${year_last}.csv \
+data/processed/players

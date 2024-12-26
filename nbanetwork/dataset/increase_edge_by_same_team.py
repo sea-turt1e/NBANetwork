@@ -1,6 +1,5 @@
 import os
 import random
-from pathlib import Path
 
 import ipdb
 import pandas as pd
@@ -58,17 +57,21 @@ def main(
                 i, j = random.randint(0, num_nodes - 1), random.randint(0, num_nodes - 1)
                 # if edge does not exist
                 if i == j:
-                    player1 = node_df.iloc[i]["node_id"]
-                    player2 = node_df.iloc[j]["node_id"]
-                    if (player1, player2) not in (pos_edges_set | neg_edges_set):
-                        neg_edges_list.append([player1, player2])
-                        f.write(f"{player1},{player2}\n")
-                        num_neg_edges += 1
-                        pbar.update(1)
-                    num_while += 1
+                    continue
+                if (i, j) in pos_edges_set or (j, i) in pos_edges_set:
+                    continue
+                if (i, j) in neg_edges_set or (j, i) in neg_edges_set:
+                    continue
+                neg_edges_set.add((node_df.iloc[i]["node_id"], node_df.iloc[j]["node_id"]))
+                num_neg_edges += 1
+                pbar.update(1)
+                num_while += 1
+
                 if num_while > num_neg_edges_increase * 10:
                     logger.error("too many while loops.")
                     break
+        for edge in neg_edges_set:
+            f.write(f"{edge[0]},{edge[1]}\n")
         logger.info("Negative samples increased.")
     with open(output_pos_edge_path, "w") as f:
         f.write("source,target\n")
