@@ -60,21 +60,51 @@ def main(
 
     node_df = pd.read_csv(nodes_path)
 
-    # define function to predict chemistry
-    def predict_chemistry(player1, player2):
-        # if player1 and player2 are in same team
-        player1_team = node_df[node_df["node_id"] == player1]["team_abbreviation"].values[0]
-        player2_team = node_df[node_df["node_id"] == player2]["team_abbreviation"].values[0]
-        if player1_team == player2_team:
-            return 99
+    # Define function to predict chemistry between two players
+    def predict_chemistry(player1, player2, model, data, node_ids, node_df, z):
+        """
+        Predicts the chemistry score between two players.
+
+        Args:
+            player1 (str): ID or name of the first player.
+            player2 (str): ID or name of the second player.
+            model (GCN): Trained GNN model.
+            data (Data): Input data for the model.
+            node_ids (dict): Mapping from player IDs to node indices.
+            node_df (pd.DataFrame): DataFrame containing player information.
+            z (torch.Tensor): Node embeddings.
+
+        Returns:
+            float: Chemistry score between player1 and player2.
+        """
+        # Get node indices for the players
         idx1 = node_ids.get(player1)
         idx2 = node_ids.get(player2)
+
         if idx1 is None or idx2 is None:
-            return "cannot find player"
-        emb1 = z[idx1]
-        emb2 = z[idx2]
-        score = torch.sigmoid((emb1 * emb2).sum()).item()
-        return score
+            return 0.0  # Return 0.0 if any player is not found
+
+        # Get team information for the players
+        player1_team = node_df.loc[node_df["node_id"] == player1, "team_abbreviation"].values
+        player2_team = node_df.loc[node_df["node_id"] == player2, "team_abbreviation"].values
+
+        if len(player1_team) > 0 and len(player2_team) > 0:
+            if player1_team[0] == player2_team[0]:
+                return 1.0  # Return 1.0 if players are on the same team
+
+        # # Get embeddings for the players
+        # emb1 = z[idx1].unsqueeze(0)  # [1, hidden_dim]
+        # emb2 = z[idx2].unsqueeze(0)  # [1, hidden_dim]
+
+        # Calculate edge scores using the model's score method
+        src = torch.tensor([idx1], dtype=torch.long)
+        dst = torch.tensor([idx2], dtype=torch.long)
+        scores = model.score(z, src, dst)
+
+        # Apply sigmoid to get probability
+        chemistry = torch.sigmoid(scores).item()
+
+        return chemistry
 
     # pick up common players from the prediction file
     pickup_players_name = [
@@ -92,7 +122,7 @@ def main(
         for j in range(i + 1, len(pickup_players_name)):
             player1 = pickup_players_name[i]
             player2 = pickup_players_name[j]
-            chemistry = predict_chemistry(player1, player2)
+            chemistry = predict_chemistry(player1, player2, model, data, node_ids, node_df, z)
             players_relation.append([player1, player2, chemistry])
 
     # visualize chemistry network
