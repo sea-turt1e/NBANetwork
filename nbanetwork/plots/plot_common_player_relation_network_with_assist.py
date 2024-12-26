@@ -1,4 +1,3 @@
-import csv
 import os
 from pathlib import Path
 
@@ -9,9 +8,8 @@ import pandas as pd
 import torch
 import typer
 from loguru import logger
-from tqdm import tqdm
 
-from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
+from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
 from nbanetwork.modeling.gnn_models import GCN
 from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
@@ -22,12 +20,12 @@ app = typer.Typer()
 def main(
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
-    common_player_path: Path = RAW_DATA_DIR / "nbadatabase" / "csv" / "common_player_info.csv",
-    prediction_dir: Path = PROCESSED_DATA_DIR / "predictions",
     model_path: Path = MODELS_DIR / "gnn_model_assist.pth",
     output_plot_dir: Path = PROCESSED_DATA_DIR / "plots",
     year_from: int = 2022,
     year_until: int = 2023,
+    threshold_high: float = 0.95,
+    threshold_low: float = 0.90,
 ):
 
     # create features and edge index
@@ -88,7 +86,7 @@ def main(
 
         if len(player1_team) > 0 and len(player2_team) > 0:
             if player1_team[0] == player2_team[0]:
-                return 1.0  # Return 1.0 if players are on the same team
+                return 99  # Return 1.0 if players are on the same team
 
         # # Get embeddings for the players
         # emb1 = z[idx1].unsqueeze(0)  # [1, hidden_dim]
@@ -108,10 +106,10 @@ def main(
     pickup_players_name = [
         "Stephen Curry_2009_7",
         "James Harden_2009_3",
-        "Jimmy Butler_2011_30",
+        "Giannis Antetokounmpo_2013_15",
         "Nikola Jokic_2014_41",
-        "Rui Hachimura_2019_9",
-        "Clint Capela_2014_25",
+        "LeBron James_2003_1",
+        "Luka Doncic_2018_3",
     ]
 
     players_relation = []
@@ -127,7 +125,7 @@ def main(
     logger.info("Visualizing chemistry network...")
     G = nx.Graph()
     for row in players_relation:
-        G.add_edge(row[0], row[1], weight=round(float(row[2]), 4))
+        G.add_edge(row[0], row[1], weight=float(row[2]))
 
     pos = nx.spring_layout(G, k=0.15, iterations=20)  # Adjust layout parameters for better spacing
     edge_labels = nx.get_edge_attributes(G, "weight")
@@ -139,16 +137,16 @@ def main(
 
     # Draw labels with smaller font size and slight offset
     for node, (x, y) in pos.items():
-        plt.text(x, y + 0.02, node, fontsize=8, ha="center", va="bottom")
-
-    # nx.draw_networkx_edges(G, pos, alpha=0.5)
+        plt.text(x, y + 0.02, node, fontsize=10, ha="center", va="bottom")
 
     # If weight is higher than 0.95, draw edge label with red color
-    red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] >= 0.90 and d["weight"] <= 1.0]
-    black_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] >= 0.86 and d["weight"] < 0.90]
-    blue_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] < 0.86]
+    red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] >= threshold_high and d["weight"] <= 1.0]
+    black_edges = [
+        (u, v) for (u, v, d) in G.edges(data=True) if d["weight"] >= threshold_low and d["weight"] < threshold_high
+    ]
+    blue_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] < threshold_low]
     # If 99, don't draw edge label
-    edge_labels = {(u, v): f"{d['weight']:.2f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 99}
+    edge_labels = {(u, v): f"{d['weight']:.3f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 99}
 
     # Draw edges
     nx.draw_networkx_edges(G, pos, edgelist=red_edges, edge_color="r", width=2)
@@ -156,7 +154,7 @@ def main(
     nx.draw_networkx_edges(G, pos, edgelist=blue_edges, edge_color="blue", width=1)
 
     # Draw edge labels with smaller font size
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=6, label_pos=0.3)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=10, label_pos=0.3)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(output_plot_dir):
