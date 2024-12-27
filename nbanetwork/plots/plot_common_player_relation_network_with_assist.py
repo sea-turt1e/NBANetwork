@@ -9,11 +9,21 @@ import torch
 import typer
 from loguru import logger
 
-from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
+from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, REPORTS_DIR
 from nbanetwork.modeling.gnn_models import GCN
 from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
 app = typer.Typer()
+
+# pick up common players from the prediction file
+pickup_players_name = [
+    "Stephen Curry_2009_7",
+    "James Harden_2009_3",
+    "Giannis Antetokounmpo_2013_15",
+    "Nikola Jokic_2014_41",
+    "LeBron James_2003_1",
+    "Luka Doncic_2018_3",
+]
 
 
 @app.command()
@@ -21,7 +31,7 @@ def main(
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     model_path: Path = MODELS_DIR / "gnn_model_assist.pth",
-    output_plot_dir: Path = PROCESSED_DATA_DIR / "plots",
+    output_plot_dir: Path = REPORTS_DIR / "plots",
     year_from: int = 2022,
     year_until: int = 2023,
     threshold_high: float = 0.95,
@@ -86,7 +96,7 @@ def main(
 
         if len(player1_team) > 0 and len(player2_team) > 0:
             if player1_team[0] == player2_team[0]:
-                return 99  # Return 1.0 if players are on the same team
+                return 1.0  # Return 1.0 if players are on the same team
 
         # # Get embeddings for the players
         # emb1 = z[idx1].unsqueeze(0)  # [1, hidden_dim]
@@ -101,16 +111,6 @@ def main(
         chemistry = torch.sigmoid(scores).item()
 
         return chemistry
-
-    # pick up common players from the prediction file
-    pickup_players_name = [
-        "Stephen Curry_2009_7",
-        "James Harden_2009_3",
-        "Giannis Antetokounmpo_2013_15",
-        "Nikola Jokic_2014_41",
-        "LeBron James_2003_1",
-        "Luka Doncic_2018_3",
-    ]
 
     players_relation = []
     # predict chemistry for each pair of common players
@@ -145,13 +145,13 @@ def main(
         (u, v) for (u, v, d) in G.edges(data=True) if d["weight"] >= threshold_low and d["weight"] < threshold_high
     ]
     blue_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] < threshold_low]
-    # If 99, don't draw edge label
-    edge_labels = {(u, v): f"{d['weight']:.3f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 99}
+    # If 1.0, it means that the players are in the same team, so we don't need to draw the edge
+    edge_labels = {(u, v): f"{d['weight']:.3f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 1.0}
 
     # Draw edges
-    nx.draw_networkx_edges(G, pos, edgelist=red_edges, edge_color="r", width=2)
+    nx.draw_networkx_edges(G, pos, edgelist=red_edges, edge_color="red", width=2)
     nx.draw_networkx_edges(G, pos, edgelist=black_edges, edge_color="black", width=1)
-    nx.draw_networkx_edges(G, pos, edgelist=blue_edges, edge_color="blue", width=1)
+    nx.draw_networkx_edges(G, pos, edgelist=blue_edges, edge_color="blue", width=2)
 
     # Draw edge labels with smaller font size
     nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=10, label_pos=0.3)

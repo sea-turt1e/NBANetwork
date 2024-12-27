@@ -58,7 +58,7 @@ def main(
         player1_team = node_df[node_df["node_id"] == player1]["team_abbreviation"].values[0]
         player2_team = node_df[node_df["node_id"] == player2]["team_abbreviation"].values[0]
         if player1_team == player2_team:
-            return 99
+            return 1.0
         idx1 = node_ids.get(player1)
         idx2 = node_ids.get(player2)
         if idx1 is None or idx2 is None:
