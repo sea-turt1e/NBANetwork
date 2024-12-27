@@ -70,7 +70,7 @@ def main(
                     logger.error("too many while loops.")
                     break
         for edge in neg_edges_set:
-            f.write(f"{edge[0]},{edge[1]},1\n")
+            f.write(f"{edge[0]},{edge[1]},0\n")
         logger.info("Negative samples increased.")
     with open(output_pos_edge_path, "w") as f:
         f.write("source,target,weight\n")
