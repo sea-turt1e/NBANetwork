@@ -149,8 +149,8 @@ def main(
     red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.95 and d["weight"] <= 1.0]
     black_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] > 0.30 and d["weight"] <= 0.95]
     blue_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] <= 0.30]
-    # If 99, don't draw edge label
-    edge_labels = {(u, v): f"{d['weight']:.2f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 99}
+    # If 1,0, don't draw edge label
+    edge_labels = {(u, v): f"{d['weight']:.2f}" for (u, v, d) in G.edges(data=True) if d["weight"] != 1.0}
 
     # Draw edges
     nx.draw_networkx_edges(G, pos, edgelist=red_edges, edge_color="r", width=2)
