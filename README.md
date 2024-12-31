@@ -16,6 +16,7 @@ macOS
 ## Installation
 ```
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Players Chemistry Network
