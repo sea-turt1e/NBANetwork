@@ -33,6 +33,7 @@ sh scripts/player_chemistry/pipeline_player_chemistry_by_assists.sh
 - preprocess the data
 - train the model
 - predict the players who have never been on the same team before and have good chemistry.
+- visiualize the network of common players.
 
 ### network visualization
 You will get the image of the network visualization of the players who have good chemistry like below.

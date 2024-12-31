@@ -26,6 +26,7 @@ def main(
         logger.error("edge_ratio must be less than or equal to 10.0.")
         return
     node_df = pd.read_csv(nodes_path)
+    node_team_map = dict(zip(node_df["node_id"], node_df["team_abbreviation"]))
     num_nodes = len(node_df)
     pos_edges = pd.read_csv(pos_edge_path)
     if not os.path.exists(neg_edge_path):
@@ -39,39 +40,58 @@ def main(
 
     pos_edges_list = pos_edges[["source", "target", "weight"]].values.tolist()
     neg_edges_list = neg_edges[["source", "target", "weight"]].values.tolist()
-
-    num_neg_edges_increase = int(len(pos_edges) * edge_ratio - len(neg_edges))
-    print(f"num_edges_increase: {num_neg_edges_increase}")
-    num_while = 0
-    num_neg_edges = 0
-    # save positive and negative samples
-    output_pos_edge_path = output_dir + "/" + os.path.basename(pos_edge_path)
-    output_neg_edge_path = output_dir + "/" + os.path.basename(neg_edge_path)
     # convert list to set for faster search
     pos_edges_set = set(tuple(edge) for edge in pos_edges_list)
     neg_edges_set = set(tuple(edge) for edge in neg_edges_list)
-    with open(output_neg_edge_path, "w") as f:
+
+    num_neg_edges_increase = int(len(pos_edges) * edge_ratio - len(neg_edges))
+    print(f"num_edges_increase: {num_neg_edges_increase}")
+    # save positive and negative samples
+    output_pos_edge_path = output_dir + "/" + os.path.basename(pos_edge_path)
+    # output_neg_edge_path = output_dir + "/" + os.path.basename(neg_edge_path)
+    output_neg_edge_path_same = output_dir + "/same_team_" + os.path.basename(neg_edge_path)
+    output_neg_edge_path_diff = output_dir + "/diff_team_" + os.path.basename(neg_edge_path)
+    neg_same_team_list = []
+    neg_diff_team_list = []
+    max_tries = num_neg_edges_increase * 10
+    trials = 0
+    new_neg_count = 0
+
+    with tqdm() as pbar:
+        while new_neg_count < num_neg_edges_increase and trials < max_tries:
+            i, j = random.randint(0, num_nodes - 1), random.randint(0, num_nodes - 1)
+            # if edge does not exist
+            if i == j:
+                continue
+            source_id = node_df.iloc[i]["node_id"]
+            target_id = node_df.iloc[j]["node_id"]
+            if (source_id, target_id) in pos_edges_set or (source_id, target_id) in neg_edges_set:
+                continue
+            if (target_id, source_id) in pos_edges_set or (target_id, source_id) in neg_edges_set:
+                continue
+
+            # check if source and target are in the same team
+            if node_team_map[source_id] == node_team_map[target_id]:
+                # samee team
+                neg_same_team_list.append([source_id, target_id, 0])
+            else:
+                # different team
+                neg_diff_team_list.append([source_id, target_id, 0])
+            neg_edges_set.add((source_id, target_id))
+            neg_edges_set.add((target_id, source_id))
+            new_neg_count += 1
+            pbar.update(1)
+
+    with open(output_neg_edge_path_same, "w") as f:
         f.write("source,target,weight\n")
-        with tqdm() as pbar:
-            while num_neg_edges < num_neg_edges_increase:
-                i, j = random.randint(0, num_nodes - 1), random.randint(0, num_nodes - 1)
-                # if edge does not exist
-                if i == j:
-                    continue
-                if (i, j) in pos_edges_set or (j, i) in pos_edges_set:
-                    continue
-                if (i, j) in neg_edges_set or (j, i) in neg_edges_set:
-                    continue
-                neg_edges_set.add((node_df.iloc[i]["node_id"], node_df.iloc[j]["node_id"]))
-                num_neg_edges += 1
-                pbar.update(1)
-                num_while += 1
-                if num_while > num_neg_edges_increase * 10:
-                    logger.error("too many while loops.")
-                    break
-        for edge in neg_edges_set:
-            f.write(f"{edge[0]},{edge[1]},0\n")
-        logger.info("Negative samples increased.")
+        for edge in neg_same_team_list:
+            f.write(f"{edge[0]},{edge[1]},{edge[2]}\n")
+
+    with open(output_neg_edge_path_diff, "w") as f:
+        f.write("source,target,weight\n")
+        for edge in neg_diff_team_list:
+            f.write(f"{edge[0]},{edge[1]},{edge[2]}\n")
+
     with open(output_pos_edge_path, "w") as f:
         f.write("source,target,weight\n")
         for edge in pos_edges_list:
