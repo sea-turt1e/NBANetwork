@@ -42,9 +42,9 @@ typer nbanetwork/dataset/make_assist_relation_data.py run
 typer nbanetwork/dataset/make_player_nodes.py run --year-from $year_from --year-until $year_until $is_debug
 typer nbanetwork/dataset/make_player_nodes.py run --year-from $year_until --year-until $year_last $is_debug
 
-# make pos_edge_player_with_assists dataset for train and test
-typer nbanetwork/dataset/pos_edge_player_with_assists.py run --year-from $year_from --year-until $year_until
-typer nbanetwork/dataset/pos_edge_player_with_assists.py run --year-from $year_until --year-until $year_last
+# make pos_edge_player_by_assist dataset for train and test
+typer nbanetwork/dataset/pos_edge_player_by_assist.py run --year-from $year_from --year-until $year_until
+typer nbanetwork/dataset/pos_edge_player_by_assist.py run --year-from $year_until --year-until $year_last
 
 # increase the number of edge samples
 typer nbanetwork/dataset/increase_edge_by_assist.py run \

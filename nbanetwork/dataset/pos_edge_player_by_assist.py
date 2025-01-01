@@ -39,7 +39,7 @@ def main(
     for _, row in df_node.iterrows():
         G.add_node(row["node_id"], **row.to_dict())
 
-    # add edges if the number of assists is greater than the threshold
+    # add edges if the number of assist is greater than the threshold
     assist_data = pd.read_csv(input_path)
     assist_data["season"] = assist_data["season"].fillna(method="ffill")
     assist_data = assist_data[assist_data["season"].map(lambda x: int(x[:4])) >= year_from]

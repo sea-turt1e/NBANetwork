@@ -1,4 +1,4 @@
-#!/bin/bash
+ #!/bin/bash
 
 # default values
 year_from=1996
@@ -45,4 +45,4 @@ done
 typer nbanetwork/modeling/train_gnn_players_by_assist.py run --year-from "$year_from" --year-until "$year_until" --epochs "$epochs"
 
 # plot 
-typer nbanetwork/plots/plot_common_player_relation_network_with_assist.py run --year-from "$year_until" --year-until "$year_last" --threshold-high "$threshold_high_relation" --threshold-low "$threshold_low_relation"
+typer nbanetwork/plots/plot_common_player_relation_network_by_assist.py run --year-from "$year_until" --year-until "$year_last" --threshold-high "$threshold_high_relation" --threshold-low "$threshold_low_relation"

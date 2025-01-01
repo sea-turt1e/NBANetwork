@@ -25,7 +25,7 @@ Predict players who have never been on the same team before and have good chemis
 ### pipeline script
 You can run the pipeline script.
 ```
-sh scripts/player_chemistry/pipeline_player_chemistry_by_assists.sh
+sh scripts/player_chemistry/pipeline_player_chemistry_by_assist.sh
 ```
 
 ### pipeline steps
