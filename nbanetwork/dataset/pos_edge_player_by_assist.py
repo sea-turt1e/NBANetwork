@@ -49,7 +49,7 @@ def main(
     assist_data = assist_data[assist_data["assister"] != assist_data["scorer"]]
 
     if is_debug:
-        assist_data = assist_data.sample(1000)
+        assist_data = assist_data.sample(10000)
     # save edges with positive and negative signs
     for _, group in tqdm(assist_data.groupby("season"), desc="Adding edges"):
         for _, row in group.iterrows():
@@ -65,6 +65,26 @@ def main(
                 G[assister][scorer]["weight"] += 1
             else:
                 G.add_edge(assister, scorer, weight=1)
+
+    # same team but 0 assist edge
+    for _, group in tqdm(assist_data.groupby("season"), desc="Adding same team but 0 assist edges"):
+        for _, row in group.iterrows():
+            scorer = df_node[df_node["player_name"] == row["scorer"]]["node_id"].values
+            assister = df_node[df_node["player_name"] == row["assister"]]["node_id"].values
+            if len(scorer) == 0 or len(assister) == 0:
+                continue
+            scorer = scorer[0]
+            assister = assister[0]
+            if scorer == assister:
+                continue
+            if (
+                df_node[df_node["node_id"] == scorer]["team_abbreviation"].values[0]
+                == df_node[df_node["node_id"] == assister]["team_abbreviation"].values[0]
+            ):
+                if G.has_edge(assister, scorer):
+                    continue
+                else:
+                    G.add_edge(assister, scorer, weight=0)
 
     # save edge list
     output_path = edge_output_dir / f"assist_edges_pos_{year_from}-{year_until}.csv"
