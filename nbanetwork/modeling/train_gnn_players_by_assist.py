@@ -28,7 +28,7 @@ def main(
 ):
 
     pos_edge_path = pos_neg_edges_dir / f"assist_edges_pos_{year_from}-{year_until}.csv"
-    neg_edge_path = pos_neg_edges_dir / f"diff_team_assist_edges_neg_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"same_team_assist_edges_neg_{year_from}-{year_until}.csv"
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"

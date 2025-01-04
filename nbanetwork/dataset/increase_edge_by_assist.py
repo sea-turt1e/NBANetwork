@@ -72,7 +72,7 @@ def main(
 
             # check if source and target are in the same team
             if node_team_map[source_id] == node_team_map[target_id]:
-                # samee team
+                # same team
                 neg_same_team_list.append([source_id, target_id, 0])
             else:
                 # different team
