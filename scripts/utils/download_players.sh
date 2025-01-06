@@ -4,7 +4,7 @@ PROJECT_DIR="./"
 RAW_DATA_DIR="$PROJECT_DIR/data/raw"
 
 # download database
-typer nbanetwork/dataset.py run download_from_kaggle_hub justinas/nba-players-data
+typer nbanetwork/dataset/download_from_kaggle_hub.py run justinas/nba-players-data
 
 # move the downloaded data to the players directory
 # use the latest version

@@ -25,7 +25,7 @@ pickup_players_name = [
     "Nikola Jokic_2014_41",
     "James Harden_2009_3",
 ]
-# big name players when they were traded at 2022-23 season
+# big name when they were traded at 2022-23 season
 # pickup_players_name = [
 #     "Chris Paul_2005_4",
 #     "Kevin Durant_2007_2",
@@ -34,19 +34,34 @@ pickup_players_name = [
 #     "LeBron James_2003_1",
 #     "Rui Hachimura_2019_9",
 # ]
-players_name2jp = {
-    "LeBron James_2003_1": "レブロンジェームズ",
-    "Stephen Curry_2009_7": "ステフィンカリー",
-    "Giannis Antetokounmpo_2013_15": "ヤニスアデトクンボ",
-    "Luka Doncic_2018_3": "ルカドンチッチ",
-    "Nikola Jokic_2014_41": "ニコラヨキッチ",
-    "James Harden_2009_3": "ジェームスハーデン",
-    "Chris Paul_2005_4": "クリスポール",
-    "Devin Booker_2015_13": "デビンブッカー",
-    "Kevin Durant_2007_2": "ケビンデュラント",
-    "Kyrie Irving_2011_1": "カイリーアービング",
-    "Rui Hachimura_2019_9": "八村塁",
+
+player_name_dict = {
+    "LeBron James_2003_1": "LeBron James",
+    "Stephen Curry_2009_7": "Stephen Curry",
+    "Giannis Antetokounmpo_2013_15": "Giannis Antetokounmpo",
+    "Luka Doncic_2018_3": "Luka Doncic",
+    "Nikola Jokic_2014_41": "Nikola Jokic",
+    "James Harden_2009_3": "James Harden",
+    "Chris Paul_2005_4": "Chris Paul",
+    "Devin Booker_2015_13": "Devin Booker",
+    "Kevin Durant_2007_2": "Kevin Durant",
+    "Kyrie Irving_2011_1": "Kyrie Irving",
+    "Rui Hachimura_2019_9": "Rui Hachimura",
 }
+# player name to japanese
+# player_name_dict = {
+#     "LeBron James_2003_1": "レブロンジェームズ",
+#     "Stephen Curry_2009_7": "ステフィンカリー",
+#     "Giannis Antetokounmpo_2013_15": "ヤニスアデトクンボ",
+#     "Luka Doncic_2018_3": "ルカドンチッチ",
+#     "Nikola Jokic_2014_41": "ニコラヨキッチ",
+#     "James Harden_2009_3": "ジェームスハーデン",
+#     "Chris Paul_2005_4": "クリスポール",
+#     "Devin Booker_2015_13": "デビンブッカー",
+#     "Kevin Durant_2007_2": "ケビンデュラント",
+#     "Kyrie Irving_2011_1": "カイリーアービング",
+#     "Rui Hachimura_2019_9": "八村塁",
+# }
 
 
 @app.command()
@@ -113,18 +128,6 @@ def main(
         if idx1 is None or idx2 is None:
             return 0.0  # Return 0.0 if any player is not found
 
-        # Get team information for the players
-        # player1_team = node_df.loc[node_df["node_id"] == player1, "team_abbreviation"].values
-        # player2_team = node_df.loc[node_df["node_id"] == player2, "team_abbreviation"].values
-
-        # if len(player1_team) > 0 and len(player2_team) > 0:
-        #     if player1_team[0] == player2_team[0]:
-        #         return 1.0  # Return 1.0 if players are on the same team
-
-        # # Get embeddings for the players
-        # emb1 = z[idx1].unsqueeze(0)  # [1, hidden_dim]
-        # emb2 = z[idx2].unsqueeze(0)  # [1, hidden_dim]
-
         # Calculate edge scores using the model's score method
         src = torch.tensor([idx1], dtype=torch.long)
         dst = torch.tensor([idx2], dtype=torch.long)
@@ -142,7 +145,7 @@ def main(
             player1 = pickup_players_name[i]
             player2 = pickup_players_name[j]
             chemistry = predict_chemistry(player1, player2, model, data, node_ids, node_df, z)
-            players_relation.append((players_name2jp[player1], players_name2jp[player2], chemistry))
+            players_relation.append((player_name_dict[player1], player_name_dict[player2], chemistry))
 
     # visualize chemistry network
     logger.info("Visualizing chemistry network...")

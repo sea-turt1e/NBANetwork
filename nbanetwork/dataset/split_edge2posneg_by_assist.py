@@ -1,11 +1,9 @@
 import os
-import random
 
 import ipdb
 import pandas as pd
 import typer
 from loguru import logger
-from tqdm import tqdm
 
 app = typer.Typer()
 
