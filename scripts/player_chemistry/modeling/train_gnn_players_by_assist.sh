@@ -4,7 +4,7 @@
 year_from=1996
 year_until=2022
 year_last=2023
-epochs=15
+epochs=20
 threshold_high_relation=0.95
 threshold_low_relation=0.90
 
