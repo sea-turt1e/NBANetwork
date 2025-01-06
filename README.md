@@ -36,8 +36,9 @@ sh scripts/player_chemistry/pipeline_player_chemistry_by_assist.sh
 - visiualize the network of common players who have good chemistry.
 
 ### network visualization
-You will get the image of the network visualization of the players who have good chemistry like below.
-![player_network_by_assist](images/player_chemistry_network_by_assist20241226.png)  
+You will get the image of the network visualization of the players who have good chemistry like below.  
+
+![player_network_by_assist](reports/plots/chemistry_network_20250107.png)  
 
 Description:
 - player nodes: playerName_hisDraftYear_hisDraftPick
