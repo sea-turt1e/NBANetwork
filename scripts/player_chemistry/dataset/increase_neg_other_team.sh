@@ -5,7 +5,7 @@ year_from=1996
 year_until=2022
 year_last=2023
 is_debug=""
-edge_ratio=1.5
+edge_ratio=1.2
 
 # parse command line arguments
 while [ "$#" -gt 0 ]; do
