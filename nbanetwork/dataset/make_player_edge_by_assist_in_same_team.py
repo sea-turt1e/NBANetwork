@@ -67,27 +67,23 @@ def main(
                 G.add_edge(assister, scorer, weight=1)
 
     # same team but 0 assist edge
-    for _, group in tqdm(assist_data.groupby("season"), desc="Adding same team but 0 assist edges"):
-        for _, row in group.iterrows():
-            scorer = df_node[df_node["player_name"] == row["scorer"]]["node_id"].values
-            assister = df_node[df_node["player_name"] == row["assister"]]["node_id"].values
-            if len(scorer) == 0 or len(assister) == 0:
+    for _, same_season in tqdm(df_node.groupby("season"), desc="Adding same team but no assist edges"):
+        for _, same_team in same_season.groupby("team_abbreviation"):
+            if len(same_team) < 2:
                 continue
-            scorer = scorer[0]
-            assister = assister[0]
-            if scorer == assister:
-                continue
-            if (
-                df_node[df_node["node_id"] == scorer]["team_abbreviation"].values[0]
-                == df_node[df_node["node_id"] == assister]["team_abbreviation"].values[0]
-            ):
-                if G.has_edge(assister, scorer):
-                    continue
-                else:
-                    G.add_edge(assister, scorer, weight=0)
+            players = same_team["node_id"].values
+            for u in players:
+                for v in players:
+                    if u == v:
+                        continue
+                    if G.has_edge(u, v):
+                        continue
+                    G.add_edge(u, v, weight=0)
 
     # save edge list
-    output_path = edge_output_dir / f"assist_edges_pos_{year_from}-{year_until}.csv"
+    if not os.path.exists(edge_output_dir):
+        os.makedirs(edge_output_dir)
+    output_path = edge_output_dir / f"assist_edges_same_team_{year_from}-{year_until}.csv"
     with open(output_path, "w") as f:
         f.write("source,target,weight\n")
         for u, v, d in G.edges(data=True):
