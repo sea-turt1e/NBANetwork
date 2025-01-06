@@ -7,6 +7,7 @@ import networkx as nx
 import pandas as pd
 import torch
 import typer
+from japanize_matplotlib import japanize
 from loguru import logger
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, REPORTS_DIR
@@ -17,13 +18,35 @@ app = typer.Typer()
 
 # pick up common players from the prediction file
 pickup_players_name = [
-    "Stephen Curry_2009_7",
-    "James Harden_2009_3",
-    "Giannis Antetokounmpo_2013_15",
-    "Nikola Jokic_2014_41",
     "LeBron James_2003_1",
+    "Stephen Curry_2009_7",
+    "Giannis Antetokounmpo_2013_15",
     "Luka Doncic_2018_3",
+    "Nikola Jokic_2014_41",
+    "James Harden_2009_3",
 ]
+# big name players when they were traded at 2022-23 season
+# pickup_players_name = [
+#     "Chris Paul_2005_4",
+#     "Kevin Durant_2007_2",
+#     "Kyrie Irving_2011_1",
+#     "Luka Doncic_2018_3",
+#     "LeBron James_2003_1",
+#     "Rui Hachimura_2019_9",
+# ]
+players_name2jp = {
+    "LeBron James_2003_1": "レブロンジェームズ",
+    "Stephen Curry_2009_7": "ステフィンカリー",
+    "Giannis Antetokounmpo_2013_15": "ヤニスアデトクンボ",
+    "Luka Doncic_2018_3": "ルカドンチッチ",
+    "Nikola Jokic_2014_41": "ニコラヨキッチ",
+    "James Harden_2009_3": "ジェームスハーデン",
+    "Chris Paul_2005_4": "クリスポール",
+    "Devin Booker_2015_13": "デビンブッカー",
+    "Kevin Durant_2007_2": "ケビンデュラント",
+    "Kyrie Irving_2011_1": "カイリーアービング",
+    "Rui Hachimura_2019_9": "八村塁",
+}
 
 
 @app.command()
@@ -91,12 +114,12 @@ def main(
             return 0.0  # Return 0.0 if any player is not found
 
         # Get team information for the players
-        player1_team = node_df.loc[node_df["node_id"] == player1, "team_abbreviation"].values
-        player2_team = node_df.loc[node_df["node_id"] == player2, "team_abbreviation"].values
+        # player1_team = node_df.loc[node_df["node_id"] == player1, "team_abbreviation"].values
+        # player2_team = node_df.loc[node_df["node_id"] == player2, "team_abbreviation"].values
 
-        if len(player1_team) > 0 and len(player2_team) > 0:
-            if player1_team[0] == player2_team[0]:
-                return 1.0  # Return 1.0 if players are on the same team
+        # if len(player1_team) > 0 and len(player2_team) > 0:
+        #     if player1_team[0] == player2_team[0]:
+        #         return 1.0  # Return 1.0 if players are on the same team
 
         # # Get embeddings for the players
         # emb1 = z[idx1].unsqueeze(0)  # [1, hidden_dim]
@@ -119,7 +142,7 @@ def main(
             player1 = pickup_players_name[i]
             player2 = pickup_players_name[j]
             chemistry = predict_chemistry(player1, player2, model, data, node_ids, node_df, z)
-            players_relation.append([player1, player2, chemistry])
+            players_relation.append((players_name2jp[player1], players_name2jp[player2], chemistry))
 
     # visualize chemistry network
     logger.info("Visualizing chemistry network...")
@@ -137,7 +160,7 @@ def main(
 
     # Draw labels with smaller font size and slight offset
     for node, (x, y) in pos.items():
-        plt.text(x, y + 0.02, node, fontsize=10, ha="center", va="bottom")
+        plt.text(x, y + 0.02, node, fontsize=20, ha="center", va="bottom")
 
     # If weight is higher than 0.95, draw edge label with red color
     red_edges = [(u, v) for (u, v, d) in G.edges(data=True) if d["weight"] >= threshold_high and d["weight"] <= 1.0]
@@ -154,7 +177,7 @@ def main(
     nx.draw_networkx_edges(G, pos, edgelist=blue_edges, edge_color="blue", width=2)
 
     # Draw edge labels with smaller font size
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=10, label_pos=0.3)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=20, label_pos=0.3)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(output_plot_dir):

@@ -49,7 +49,7 @@ def main(
     assist_data = assist_data[assist_data["assister"] != assist_data["scorer"]]
 
     if is_debug:
-        assist_data = assist_data.sample(1000)
+        assist_data = assist_data.sample(10000)
     # save edges with positive and negative signs
     for _, group in tqdm(assist_data.groupby("season"), desc="Adding edges"):
         for _, row in group.iterrows():
@@ -66,8 +66,24 @@ def main(
             else:
                 G.add_edge(assister, scorer, weight=1)
 
+    # same team but 0 assist edge
+    for _, same_season in tqdm(df_node.groupby("season"), desc="Adding same team but no assist edges"):
+        for _, same_team in same_season.groupby("team_abbreviation"):
+            if len(same_team) < 2:
+                continue
+            players = same_team["node_id"].values
+            for u in players:
+                for v in players:
+                    if u == v:
+                        continue
+                    if G.has_edge(u, v):
+                        continue
+                    G.add_edge(u, v, weight=0)
+
     # save edge list
-    output_path = edge_output_dir / f"assist_edges_pos_{year_from}-{year_until}.csv"
+    if not os.path.exists(edge_output_dir):
+        os.makedirs(edge_output_dir)
+    output_path = edge_output_dir / f"assist_edges_same_team_{year_from}-{year_until}.csv"
     with open(output_path, "w") as f:
         f.write("source,target,weight\n")
         for u, v, d in G.edges(data=True):

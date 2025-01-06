@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 
 import ipdb
@@ -9,7 +10,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
+from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, REPORTS_DIR
 from nbanetwork.modeling.gnn_models import GAT, GCN
 from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
@@ -23,12 +24,13 @@ def main(
     year_from: int = 1996,
     year_until: int = 2022,
     model_save_path: Path = MODELS_DIR / "gnn_model_assist.pth",
+    report_save_dir: Path = REPORTS_DIR,
     epochs: int = 20,
     is_debug: bool = False,
 ):
 
     pos_edge_path = pos_neg_edges_dir / f"assist_edges_pos_{year_from}-{year_until}.csv"
-    neg_edge_path = pos_neg_edges_dir / f"diff_team_assist_edges_neg_{year_from}-{year_until}.csv"
+    neg_edge_path = pos_neg_edges_dir / f"assist_edges_neg_{year_from}-{year_until}.csv"
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
@@ -154,6 +156,7 @@ def main(
 
     train_losses = []
     test_aucs = []
+    model_save_threshold = 0
     for epoch in tqdm(range(epochs)):
         loss = train()
         auc = test()
@@ -162,11 +165,13 @@ def main(
         scheduler.step(auc)
         if epoch % 1 == 0:
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
+            # save model
+            # # 上がり幅が多い場合
+            # if auc > model_save_threshold + 0.01:
+            # model_save_threshold = deepcopy(auc)
+            torch.save(model.state_dict(), str(model_save_path) + f"_{epoch}.pth")
+            logger.success("Model saved.")
     logger.success("Training complete.")
-
-    # save model
-    torch.save(model.state_dict(), model_save_path)
-    logger.success("Model saved.")
 
     # plot results
     plt.figure(figsize=(12, 5))
@@ -188,6 +193,8 @@ def main(
     plt.legend()
 
     plt.tight_layout()
+    loss_repot_path = report_save_dir / "loss_assist.png"
+    plt.savefig(str(loss_repot_path))
     plt.show()
 
 
