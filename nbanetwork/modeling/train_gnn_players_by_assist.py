@@ -1,4 +1,3 @@
-from copy import deepcopy
 from pathlib import Path
 
 import ipdb
@@ -54,36 +53,11 @@ def main(
     # split train and valid data
     edges = pos_edge + neg_edge
     labels = [1] * len(pos_edge) + [0] * len(neg_edge)
-    # train_edges, test_edges, train_labels, test_labels, train_weights, test_weights = train_test_split(
-    #     edges,
-    #     labels,
-    #     edge_weights,
-    #     test_size=0.1,
-    #     random_state=42,
-    #     shuffle=True,
-    #     stratify=labels,
-    # )
 
-    # # --- 確認用コード ---
-    # train_labels = torch.tensor(train_labels, dtype=torch.float)
-    # test_labels = torch.tensor(test_labels, dtype=torch.float)
-
-    # pos_count_train = (train_labels == 1).sum().item()
-    # neg_count_train = (train_labels == 0).sum().item()
-    # pos_count_test = (test_labels == 1).sum().item()
-    # neg_count_test = (test_labels == 0).sum().item()
-
-    # print(f"Train pos:{pos_count_train} neg:{neg_count_train}")
-    # print(f"Test  pos:{pos_count_test}  neg:{neg_count_test}")
-
-    # # weights との対応確認
-    # print(f"Train edges:{len(train_edges)}, Train weights:{len(train_weights)}")
-    # print(f"Test edges:{len(test_edges)}, Test weights:{len(test_weights)}")
-
-    # 全エッジ、ラベル、ウェイトをまとめて単一の配列にする
+    # combine edge and label
     combined = list(zip(edges, labels, edge_weights))
 
-    # 分割
+    # split train and test data
     train_combined, test_combined = train_test_split(
         combined,
         test_size=0.1,
@@ -92,11 +66,11 @@ def main(
         stratify=[c[1] for c in combined],
     )
 
-    # 再展開
+    # unpack train and test data
     train_edges, train_labels, train_weights = zip(*train_combined)
     test_edges, test_labels, test_weights = zip(*test_combined)
 
-    # テンソル変換
+    # convert to tensor
     train_edges = torch.tensor(train_edges, dtype=torch.long).t()
     train_labels = torch.tensor(train_labels, dtype=torch.float)
     train_weights = torch.tensor(train_weights, dtype=torch.float)
@@ -105,10 +79,10 @@ def main(
     test_labels = torch.tensor(test_labels, dtype=torch.float)
     test_weights = torch.tensor(test_weights, dtype=torch.float)
 
-    train_edge_index = torch.tensor(train_edges, dtype=torch.long).t()
+    # train_edge_index = torch.tensor(train_edges, dtype=torch.long).t()
     train_labels = torch.tensor(train_labels, dtype=torch.float)
 
-    test_edge_index = torch.tensor(test_edges, dtype=torch.long).t()
+    # test_edge_index = torch.tensor(test_edges, dtype=torch.long).t()
     test_labels = torch.tensor(test_labels, dtype=torch.float)
 
     # define model, optimizer, and loss
@@ -128,7 +102,6 @@ def main(
         z = model(data.x, data.edge_index, data.edge_weight)
 
         # calculate edge scores
-        # src, dst = train_edge_index
         src, dst = train_edges
         scores = model.score(z, src, dst)
         loss = weighted_bce_loss(scores, train_labels, train_weights)
@@ -141,7 +114,6 @@ def main(
         model.eval()
         with torch.no_grad():
             z = model(data.x, data.edge_index, data.edge_weight)
-            # src, dst = test_edge_index
             src, dst = test_edges
             scores = model.score(z, src, dst)
             preds = torch.sigmoid(scores)
@@ -156,7 +128,6 @@ def main(
 
     train_losses = []
     test_aucs = []
-    model_save_threshold = 0
     for epoch in tqdm(range(epochs)):
         loss = train()
         auc = test()
@@ -166,11 +137,8 @@ def main(
         if epoch % 1 == 0:
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
             # save model
-            # # 上がり幅が多い場合
-            # if auc > model_save_threshold + 0.01:
-            # model_save_threshold = deepcopy(auc)
             torch.save(model.state_dict(), str(model_save_path) + f"_{epoch}.pth")
-            logger.success("Model saved.")
+    torch.save(model.state_dict(), str(model_save_path))
     logger.success("Training complete.")
 
     # plot results
