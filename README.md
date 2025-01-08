@@ -1,11 +1,18 @@
 # nbanetwork
-
+![Python](https://img.shields.io/badge/-Python-F9DC3E.svg?logo=python&style=flat)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
 
-NBA Network Analysis and Machine Learning
+NBA Network Analysis and Machine Learning.  
 e.g. train the relationships between players and predict the chemistry between players who have never been teammates.
+
+![basketball_icon](images/basketball_icon.png)
+
+## Blog
+- [dev.to](https://dev.to/seaturt1e/predicting-nba-player-chemistry-using-graph-neural-networks-2j2f)
+- [Zenn](https://zenn.dev/sea_turt1e/articles/2410af8823e6bd) *Japanese only
 
 ## Environment
 ```
@@ -46,6 +53,18 @@ Description:
 - black edges: players who could have medium chemistry.
 - <span style="color:#0066FF;">Blue edges</span>: players who could have low chemistry.
 
+#### Caution
+The default graph visualization uses the model saved at `models/gnn_model_assist_best.pth`.  
+It might result in an overfitted model or underfitted model.  
+You can change the model by changing the model path in the script.
+Also, you can change the threshold of the edge color by changing the threshold value in the script.  
+(threshold_high: 0.90, threshold_low: 0.85. threshold values are between 0 and 1.)
+```
+sh scripts/player_chemistry/plot/plot_common_player_relation_network_by_assist.sh \
+--model-path models/gnn_model_assist_{num_epoch}.pth \
+--threshold-high {threshold_high} \
+--threshold-low {threshold_low}
+```
 
 ## Project Organization
 

@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 import ipdb
@@ -16,38 +17,41 @@ from nbanetwork.utils import create_data_with_weight, create_node_ids_features_e
 
 app = typer.Typer()
 
-# pick up common players from the prediction file
-pickup_players_name = [
-    "LeBron James_2003_1",
-    "Stephen Curry_2009_7",
-    "Giannis Antetokounmpo_2013_15",
-    "Luka Doncic_2018_3",
-    "Nikola Jokic_2014_41",
-    "James Harden_2009_3",
-]
-# big name when they were traded at 2022-23 season
-# pickup_players_name = [
-#     "Chris Paul_2005_4",
-#     "Kevin Durant_2007_2",
-#     "Kyrie Irving_2011_1",
-#     "Luka Doncic_2018_3",
-#     "LeBron James_2003_1",
-#     "Rui Hachimura_2019_9",
-# ]
+# re compile for player name
+re_player_name = re.compile(r"(.+)_(\d{4})_(\d+)")
 
-player_name_dict = {
-    "LeBron James_2003_1": "LeBron James",
-    "Stephen Curry_2009_7": "Stephen Curry",
-    "Giannis Antetokounmpo_2013_15": "Giannis Antetokounmpo",
-    "Luka Doncic_2018_3": "Luka Doncic",
-    "Nikola Jokic_2014_41": "Nikola Jokic",
-    "James Harden_2009_3": "James Harden",
-    "Chris Paul_2005_4": "Chris Paul",
-    "Devin Booker_2015_13": "Devin Booker",
-    "Kevin Durant_2007_2": "Kevin Durant",
-    "Kyrie Irving_2011_1": "Kyrie Irving",
-    "Rui Hachimura_2019_9": "Rui Hachimura",
-}
+# pick up common players from the prediction file
+# pickup_players_name = [
+#     "LeBron James_2003_1",
+#     "Stephen Curry_2009_7",
+#     "Giannis Antetokounmpo_2013_15",
+#     "Luka Doncic_2018_3",
+#     "Nikola Jokic_2014_41",
+#     "James Harden_2009_3",
+# ]
+# star player who were traded at 2022-23 season and the player who became the teammate with the traded player
+pickup_players_name = [
+    "Chris Paul_2005_4",
+    "Kevin Durant_2007_2",
+    "Kyrie Irving_2011_1",
+    "Luka Doncic_2018_3",
+    "LeBron James_2003_1",
+    "Rui Hachimura_2019_9",
+]
+
+# player_name_dict = {
+#     "LeBron James_2003_1": "LeBron James",
+#     "Stephen Curry_2009_7": "Stephen Curry",
+#     "Giannis Antetokounmpo_2013_15": "Giannis Antetokounmpo",
+#     "Luka Doncic_2018_3": "Luka Doncic",
+#     "Nikola Jokic_2014_41": "Nikola Jokic",
+#     "James Harden_2009_3": "James Harden",
+#     "Chris Paul_2005_4": "Chris Paul",
+#     "Devin Booker_2015_13": "Devin Booker",
+#     "Kevin Durant_2007_2": "Kevin Durant",
+#     "Kyrie Irving_2011_1": "Kyrie Irving",
+#     "Rui Hachimura_2019_9": "Rui Hachimura",
+# }
 # player name to japanese
 # player_name_dict = {
 #     "LeBron James_2003_1": "レブロンジェームズ",
@@ -145,7 +149,10 @@ def main(
             player1 = pickup_players_name[i]
             player2 = pickup_players_name[j]
             chemistry = predict_chemistry(player1, player2, model, data, node_ids, node_df, z)
-            players_relation.append((player_name_dict[player1], player_name_dict[player2], chemistry))
+            # players_relation.append((player_name_dict[player1], player_name_dict[player2], chemistry))
+            players_relation.append(
+                (re_player_name.match(player1).group(1), re_player_name.match(player2).group(1), chemistry)
+            )
 
     # visualize chemistry network
     logger.info("Visualizing chemistry network...")

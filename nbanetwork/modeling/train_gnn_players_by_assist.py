@@ -22,7 +22,7 @@ def main(
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     year_from: int = 1996,
     year_until: int = 2022,
-    model_save_path: Path = MODELS_DIR / "gnn_model_assist.pth",
+    model_save_path: Path = MODELS_DIR / "gnn_model_assist",
     report_save_dir: Path = REPORTS_DIR,
     epochs: int = 20,
     is_debug: bool = False,
@@ -128,6 +128,7 @@ def main(
 
     train_losses = []
     test_aucs = []
+    best_auc = 0
     for epoch in tqdm(range(epochs)):
         loss = train()
         auc = test()
@@ -138,7 +139,10 @@ def main(
             print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
             # save model
             torch.save(model.state_dict(), str(model_save_path) + f"_{epoch}.pth")
-    torch.save(model.state_dict(), str(model_save_path))
+        if auc > best_auc + 0.01:
+            best_auc = auc
+            torch.save(model.state_dict(), str(model_save_path) + "_best.pth")
+            logger.success(f"Best model saved at epoch {epoch} with AUC: {auc:.4f}")
     logger.success("Training complete.")
 
     # plot results

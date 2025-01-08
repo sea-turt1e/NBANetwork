@@ -47,7 +47,4 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-typer nbanetwork/modeling/train_gnn_players_by_assist.py run --year-from "$year_from" --year-until "$year_until" --epochs "$epochs"
-
-# plot 
-sh scripts/player_chemistry/plot/plot_common_player_relation_network_by_assist.sh --model-path models/gnn_model_assist_best.pth --year-until "$year_until" --year-last "$year_last" --threshold-high "$threshold_high" --threshold-low "$threshold_low"
+typer nbanetwork/plots/plot_common_player_relation_network_by_assist.py run --model-path "$model_path" --year-from "$year_until" --year-until "$year_last" --threshold-high "$threshold_high" --threshold-low "$threshold_low"
