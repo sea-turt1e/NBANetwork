@@ -16,8 +16,7 @@ e.g. train the relationships between players and predict the chemistry between p
 
 ## Environment
 ```
-python 3.12.7
-macOS
+python >= 3.12
 ```
 
 ## Installation
