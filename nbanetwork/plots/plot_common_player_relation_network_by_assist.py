@@ -12,7 +12,7 @@ from japanize_matplotlib import japanize
 from loguru import logger
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, REPORTS_DIR
-from nbanetwork.modeling.gnn_models import GCN, GraphSAGE
+from nbanetwork.modeling.gnn_models import GCN, MultiGraphConv
 from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
 app = typer.Typer()
@@ -30,14 +30,14 @@ pickup_players_name = [
     "James Harden_2009_3",
 ]
 # star player who were traded at 2022-23 season and the player who became the teammate with the traded player
-# pickup_players_name = [
-#     "Chris Paul_2005_4",
-#     "Kevin Durant_2007_2",
-#     "Kyrie Irving_2011_1",
-#     "Luka Doncic_2018_3",
-#     "LeBron James_2003_1",
-#     "Rui Hachimura_2019_9",
-# ]
+pickup_players_name = [
+    "Chris Paul_2005_4",
+    "Kevin Durant_2007_2",
+    "Kyrie Irving_2011_1",
+    "Luka Doncic_2018_3",
+    "LeBron James_2003_1",
+    "Rui Hachimura_2019_9",
+]
 
 # player_name_dict = {
 #     "LeBron James_2003_1": "LeBron James",
@@ -98,7 +98,7 @@ def main(
     # pos_edge = pos_edge_index.t().tolist()
     # neg_edge = neg_edge_index.t().tolist()
 
-    model = GraphSAGE(in_channels=features.shape[1], hidden_channels=64)
+    model = MultiGraphConv(in_channels=features.shape[1], hidden_channels=64)
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.eval()
 
