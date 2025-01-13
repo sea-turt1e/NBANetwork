@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, REPORTS_DIR
-from nbanetwork.modeling.gnn_models import GAT, GCN
+from nbanetwork.modeling.gnn_models import GAT, GCN, MultiGraphConv
 from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
 app = typer.Typer()
@@ -86,7 +86,7 @@ def main(
     test_labels = torch.tensor(test_labels, dtype=torch.float)
 
     # define model, optimizer, and loss
-    model = GCN(in_channels=features.shape[1], hidden_channels=64)
+    model = MultiGraphConv(in_channels=features.shape[1], hidden_channels=64)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", patience=10)
     criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
