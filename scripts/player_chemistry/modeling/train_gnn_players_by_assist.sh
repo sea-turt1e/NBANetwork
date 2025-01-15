@@ -5,7 +5,7 @@ model_path="models/gnn_model_assist_best.pth"
 year_from=1996
 year_until=2022
 year_last=2023
-epochs=20
+epochs=100
 threshold_high=0.90
 threshold_low=0.85
 
