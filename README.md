@@ -51,6 +51,9 @@ Description:
 - black edges: players who could have medium chemistry.
 - <span style="color:#0066FF;">Blue edges</span>: players who could have low chemistry.
 
+### Curve of the loss and AUC
+![loss_auc_curve](images/train_curve_loss_assist.png)
+
 #### Caution
 The default graph visualization uses the model saved at `models/gnn_model_assist_best.pth`.  
 It might result in an overfitted model or underfitted model.  

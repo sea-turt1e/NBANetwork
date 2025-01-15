@@ -5,9 +5,8 @@ model_path="models/gnn_model_assist_best.pth"
 year_from=1996
 year_until=2022
 year_last=2023
-epochs=20
-threshold_high=0.90
-threshold_low=0.85
+threshold_high=0.95
+threshold_low=0.90
 
 # parse command line arguments
 while [ "$#" -gt 0 ]; do
@@ -26,10 +25,6 @@ while [ "$#" -gt 0 ]; do
       ;;
     --year-last)
       year_last="$2"
-      shift 2
-      ;;
-    --epochs)
-      epochs="$2"
       shift 2
       ;;
     --threshold-high)
