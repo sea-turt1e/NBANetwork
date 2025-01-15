@@ -167,4 +167,4 @@ tmp/*
 .vscode/*
 .DS_Store
 models/*
-reports/plots/*
+reports/*
