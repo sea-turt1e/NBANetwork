@@ -21,14 +21,14 @@ app = typer.Typer()
 re_player_name = re.compile(r"(.+)_(\d{4})_(\d+)")
 
 # pick up common players from the prediction file
-pickup_players_name = [
-    "LeBron James_2003_1",
-    "Stephen Curry_2009_7",
-    "Giannis Antetokounmpo_2013_15",
-    "Luka Doncic_2018_3",
-    "Nikola Jokic_2014_41",
-    "James Harden_2009_3",
-]
+# pickup_players_name = [
+#     "LeBron James_2003_1",
+#     "Stephen Curry_2009_7",
+#     "Giannis Antetokounmpo_2013_15",
+#     "Luka Doncic_2018_3",
+#     "Nikola Jokic_2014_41",
+#     "James Harden_2009_3",
+# ]
 # star player who were traded at 2022-23 season and the player who became the teammate with the traded player
 pickup_players_name = [
     "Chris Paul_2005_4",
