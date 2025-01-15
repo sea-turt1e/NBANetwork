@@ -87,7 +87,7 @@ def main(
 
     # define model, optimizer, and loss
     model = MultiGraphConv(in_channels=features.shape[1], hidden_channels=64)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max", patience=10)
     criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
 
@@ -136,13 +136,13 @@ def main(
         test_aucs.append(auc)
         scheduler.step(auc)
         if epoch % 1 == 0:
-            print(f"Epoch: {epoch}, Loss: {loss:.4f}, Test AUC: {auc:.4f}")
+            print(f"Epoch: {epoch}, Loss: {loss:.5f}, Test AUC: {auc:.5f}")
             # save model
             torch.save(model.state_dict(), str(model_save_path) + f"_{epoch}.pth")
-        if auc > best_auc + 0.01:
+        if auc > best_auc + 0.005:
             best_auc = auc
             torch.save(model.state_dict(), str(model_save_path) + "_best.pth")
-            logger.success(f"Best model saved at epoch {epoch} with AUC: {auc:.4f}")
+            logger.success(f"Best model saved at epoch {epoch} with AUC: {auc:.5f}")
     logger.success("Training complete.")
 
     # plot results
