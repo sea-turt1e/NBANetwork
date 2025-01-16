@@ -12,7 +12,7 @@ from japanize_matplotlib import japanize
 from loguru import logger
 
 from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, REPORTS_DIR
-from nbanetwork.modeling.gnn_models import GCN, MultiGraphConv
+from nbanetwork.modeling.initializer import initialize_model, load_config
 from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
 app = typer.Typer()
@@ -70,6 +70,7 @@ pickup_players_name = [
 
 @app.command()
 def main(
+    config_path: Path = Path("config.yaml"),
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
     model_path: Path = MODELS_DIR / "gnn_model_assist.pth",
@@ -79,6 +80,8 @@ def main(
     threshold_high: float = 0.95,
     threshold_low: float = 0.90,
 ):
+    # Load configuration
+    config = load_config(config_path)
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
@@ -95,10 +98,8 @@ def main(
     edge_weights = edge_weights / edge_weights.max()  # normalize edge weight
     data = create_data_with_weight(features, edge_index, edge_weights)
 
-    # pos_edge = pos_edge_index.t().tolist()
-    # neg_edge = neg_edge_index.t().tolist()
-
-    model = MultiGraphConv(in_channels=features.shape[1], hidden_channels=64)
+    # create model
+    model = initialize_model(config)
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.eval()
 
