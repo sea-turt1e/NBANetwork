@@ -1,0 +1,21 @@
+# For training parameters
+model:
+  type: "MultiGraphConv"
+  params:
+    in_channels: 17
+    hidden_channels: 64
+    dropout: 0.5
+
+training:
+  optimizer:
+    type: "Adam"
+    lr: 0.0005
+  scheduler:
+    type: "ReduceLROnPlateau"
+    mode: "max"
+    patience: 10
+  criterion:
+    type: "BCEWithLogitsLoss"
+    reduction: "none"
+  epochs: 500
+  batch_size: 32

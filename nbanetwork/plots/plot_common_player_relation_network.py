@@ -1,16 +1,17 @@
-import csv
 import os
 from pathlib import Path
 
 import ipdb
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
+import torch
 import typer
 from loguru import logger
-from tqdm import tqdm
 
-from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
+from nbanetwork.config import MODELS_DIR, PROCESSED_DATA_DIR
 from nbanetwork.modeling.gnn_models import GCN
+from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
 app = typer.Typer()
 
@@ -19,18 +20,11 @@ app = typer.Typer()
 def main(
     node_edges_date_dir: Path = PROCESSED_DATA_DIR / "players",
     pos_neg_edges_dir: Path = PROCESSED_DATA_DIR / "players",
-    common_player_path: Path = RAW_DATA_DIR / "nbadatabase" / "csv" / "common_player_info.csv",
-    prediction_dir: Path = PROCESSED_DATA_DIR / "predictions",
     model_path: Path = MODELS_DIR / "gnn_model.pth",
     output_plot_dir: Path = PROCESSED_DATA_DIR / "plots",
     year_from: int = 2022,
     year_until: int = 2023,
 ):
-
-    import pandas as pd
-    import torch
-
-    from nbanetwork.utils import create_data, create_node_ids_features_edge_index
 
     # create features and edge index
     nodes_path = node_edges_date_dir / f"player_nodes_{year_from}-{year_until}.csv"
@@ -46,9 +40,6 @@ def main(
 
     # create data
     data = create_data(features, edge_index)
-
-    # pos_edge = pos_edge_index.t().tolist()
-    # neg_edge = neg_edge_index.t().tolist()
 
     model = GCN(in_channels=features.shape[1], hidden_channels=64)
     model.load_state_dict(torch.load(model_path, weights_only=True))
@@ -91,10 +82,6 @@ def main(
         if len(player1_team) > 0 and len(player2_team) > 0:
             if player1_team[0] == player2_team[0]:
                 return 1.0  # Return 1.0 if players are on the same team
-
-        # # Get embeddings for the players
-        # emb1 = z[idx1].unsqueeze(0)  # [1, hidden_dim]
-        # emb2 = z[idx2].unsqueeze(0)  # [1, hidden_dim]
 
         # Calculate edge scores using the model's score method
         src = torch.tensor([idx1], dtype=torch.long)
