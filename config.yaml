@@ -2,7 +2,7 @@
 model:
   type: "MultiGraphConv"
   params:
-    in_channels: 17
+    in_channels: 17 # 16 features + 1 label
     hidden_channels: 64
     dropout: 0.5
 
