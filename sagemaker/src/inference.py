@@ -3,18 +3,15 @@ import os
 from pathlib import Path
 
 import boto3
+import dotenv
 import pandas as pd
 import torch
 import yaml
 
-from nbanetwork.modeling.gnn_models import MultiGraphConv
-from nbanetwork.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
+from .modeling.gnn_models import MultiGraphConv
+from .utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 
-
-def download_from_s3(s3_path, local_path):
-    s3 = boto3.client("s3")
-    bucket, key = s3_path.replace("s3://", "").split("/", 1)
-    s3.download_file(bucket, key, local_path)
+dotenv.load_dotenv()
 
 
 def model_fn(model_dir):
@@ -40,8 +37,7 @@ def input_fn(request_body, request_content_type):
 
 
 def predict_fn(input_data, model):
-    ssm_parameters = get_ssm_parameter("nba-players-relation-params")
-    bucket_name = json.loads(ssm_parameters)["bucket_name"]
+    bucket_name = os.getenv("S3_BUCKET_NAME")
     # S3 パスを指定
     nodes_s3 = f"s3://{bucket_name}/data/node_edges/player_nodes.csv"
     pos_edges_s3 = f"s3://{bucket_name}/data/node_edges/assist_edges_pos.csv"
@@ -73,52 +69,12 @@ def predict_fn(input_data, model):
         # Load node dataframe
     node_df = pd.read_csv(nodes_path)
 
-    # Define function to predict chemistry between two players
-    def predict_chemistry(player1, player2, model, data, node_ids, node_df, z):
-        """
-        Predicts the chemistry score between two players.
+    # Predict chemistry between two players
+    player1 = input_data.get("player1")
+    player2 = input_data.get("player2")
+    chemistry = predict_chemistry(player1, player2, model, data, node_ids, node_df, z)
 
-        Args:
-            player1 (str): ID or name of the first player.
-            player2 (str): ID or name of the second player.
-            model (torch.nn.Module): Trained GNN model.
-            data (Data): Input data for the model.
-            node_ids (dict): Mapping from player IDs to node indices.
-            node_df (pd.DataFrame): DataFrame containing player information.
-            z (torch.Tensor): Node embeddings.
-
-        Returns:
-            float: Chemistry score between player1 and player2.
-        """
-        # Get node indices for the players
-        idx1 = node_ids.get(player1)
-        idx2 = node_ids.get(player2)
-
-        if idx1 is None or idx2 is None:
-            return 0.0  # Return 0.0 if any player is not found
-
-        # Prepare source and destination tensors
-        src = torch.tensor([idx1], dtype=torch.long)
-        dst = torch.tensor([idx2], dtype=torch.long)
-
-        # Calculate edge scores using the model's score method
-        scores = model.score(z, src, dst)
-
-        # Apply sigmoid to get probability
-        chemistry = torch.sigmoid(scores).item()
-
-        return chemistry
-
-    # Predict chemistry for each pair
-    players_relation = []
-    for i in range(len(players)):
-        for j in range(i + 1, len(players)):
-            player1 = players[i]
-            player2 = players[j]
-            chemistry = predict_chemistry(player1, player2, model, data, node_ids, node_df, z)
-            players_relation.append({"player1": player1, "player2": player2, "chemistry_score": chemistry})
-
-    return players_relation
+    return {"score": chemistry}
 
 
 def output_fn(prediction, content_type):
@@ -134,12 +90,44 @@ def load_config(config_path):
     return config
 
 
-def get_ssm_parameter(parameter_name, with_decryption=True):
-    # SSM clientを作成
-    ssm = boto3.client("ssm")
+def download_from_s3(s3_path, local_path):
+    s3 = boto3.client("s3")
+    bucket, key = s3_path.replace("s3://", "").split("/", 1)
+    s3.download_file(bucket, key, local_path)
 
-    # パラメータを取得
-    response = ssm.get_parameter(Name=parameter_name, WithDecryption=with_decryption)
 
-    # パラメータの値を返す
-    return response["Parameter"]["Value"]
+# Define function to predict chemistry between two players
+def predict_chemistry(player1, player2, model, data, node_ids, node_df, z):
+    """
+    Predicts the chemistry score between two players.
+
+    Args:
+        player1 (str): ID or name of the first player.
+        player2 (str): ID or name of the second player.
+        model (torch.nn.Module): Trained GNN model.
+        data (Data): Input data for the model.
+        node_ids (dict): Mapping from player IDs to node indices.
+        node_df (pd.DataFrame): DataFrame containing player information.
+        z (torch.Tensor): Node embeddings.
+
+    Returns:
+        float: Chemistry score between player1 and player2.
+    """
+    # Get node indices for the players
+    idx1 = node_ids.get(player1)
+    idx2 = node_ids.get(player2)
+
+    if idx1 is None or idx2 is None:
+        return 0.0  # Return 0.0 if any player is not found
+
+    # Prepare source and destination tensors
+    src = torch.tensor([idx1], dtype=torch.long)
+    dst = torch.tensor([idx2], dtype=torch.long)
+
+    # Calculate edge scores using the model's score method
+    scores = model.score(z, src, dst)
+
+    # Apply sigmoid to get probability
+    chemistry = torch.sigmoid(scores).item()
+
+    return chemistry
