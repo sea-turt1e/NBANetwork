@@ -38,12 +38,12 @@ def input_fn(request_body, request_content_type):
 
 def predict_fn(input_data, model):
     bucket_name = os.getenv("S3_BUCKET_NAME")
-    # S3 パスを指定
+    # assign s3 path
     nodes_s3 = f"s3://{bucket_name}/data/node_edges/player_nodes.csv"
     pos_edges_s3 = f"s3://{bucket_name}/data/node_edges/assist_edges_pos.csv"
     neg_edges_s3 = f"s3://{bucket_name}/data/node_edges/assist_edges_neg.csv"
 
-    # ローカルパス
+    # local data directory
     local_data_dir = "/opt/ml/input/data/node_edges/"
     os.makedirs(local_data_dir, exist_ok=True)
     download_from_s3(nodes_s3, os.path.join(local_data_dir, "player_nodes.csv"))
@@ -66,7 +66,7 @@ def predict_fn(input_data, model):
     with torch.no_grad():
         z = model(data.x, data.edge_index, data.edge_weight)
 
-        # Load node dataframe
+    # Load node dataframe
     node_df = pd.read_csv(nodes_path)
 
     # Predict chemistry between two players
