@@ -28,7 +28,6 @@ def initialize_model(config):
         model = GAT(**params)
     else:
         raise ValueError(f"Unknown model type: {model_type}")
-
     return model
 
 
