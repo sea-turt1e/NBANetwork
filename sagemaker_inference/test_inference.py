@@ -1,14 +1,15 @@
-# test_inference.py
-
 import json
+from code.inference import input_fn, model_fn, output_fn, predict_fn
 from pathlib import Path
 
-from src.inference import input_fn, model_fn, output_fn, predict_fn
+import dotenv
+
+dotenv.load_dotenv()
 
 
 def test_inference():
     # load Model
-    model_dir = Path("src/")
+    model_dir = Path("code/")
     model = model_fn(model_dir)
 
     # sample input
