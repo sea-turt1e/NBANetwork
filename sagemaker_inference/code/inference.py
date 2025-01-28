@@ -1,17 +1,13 @@
 import json
 import os
+from code.modeling.gnn_models import MultiGraphConv
+from code.utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
 from pathlib import Path
 
 import boto3
-import dotenv
 import pandas as pd
 import torch
 import yaml
-
-from .modeling.gnn_models import MultiGraphConv
-from .utils import create_data_with_weight, create_node_ids_features_edge_index_with_weight
-
-dotenv.load_dotenv()
 
 
 def model_fn(model_dir):
