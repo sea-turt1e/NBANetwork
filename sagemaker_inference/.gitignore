@@ -1,3 +1,4 @@
-src/model.pth
+model.tar.gz
+model.pth
 local_data/*
 .python-version
