@@ -6,7 +6,7 @@ aiohappyeyeballs
 aiohttp
 aiosignal
 attrs
-certifi
+certifi>=2026.10.19
 charset-normalizer
 frozenlist
 fsspec
