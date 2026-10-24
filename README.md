@@ -15,14 +15,44 @@ e.g. train the relationships between players and predict the chemistry between p
 - [Zenn](https://zenn.dev/sea_turt1e/articles/2410af8823e6bd) *Japanese only
 
 ## Environment
-```
-python >= 3.12
-```
+Supported Python versions (these releases include the fix for the [eMudhra CA incident](https://emudhra.we-have-a-problem.com/)):
+
+| Python | Status |
+| --- | --- |
+| 3.14.9 | Recommended (the pinned `requirements.txt` is tested with this version) |
+| 3.13.17 | Supported |
+| 3.15.1 | Supported by nbanetwork, but PyTorch does not yet publish Python 3.15 wheels for macOS (Linux/Windows wheels exist only on the PyTorch index) |
+
+Importing `nbanetwork` emits a `UserWarning` when it runs on any other Python version. Newer patch releases of the same series (e.g. 3.14.10) are also accepted.
 
 ## Installation
 ```
+# e.g. with pyenv
+pyenv install 3.14.9
+pyenv virtualenv 3.14.9 nbanetwork
+pyenv local nbanetwork
+
+pip install -U "pip>=26.2.2"
 pip install -r requirements.txt
 pip install -e .
+```
+
+If you already have an environment on an older Python (e.g. 3.12), recreate it on one of the supported versions above. Upgrading the packages alone is not enough.
+
+## Security: eMudhra intermediate CA compromise (October 2026)
+The private keys of eight eMudhra intermediate CA certificates were compromised ([details](https://emudhra.we-have-a-problem.com/)). Clients that ship their own CA bundle, such as Python's `certifi`, could trust certificates forged with these keys. This project addresses it as follows:
+
+- **Python**: supported versions are 3.15.1 / 3.14.9 / 3.13.17 (see [Environment](#environment)). `requires-python` in `pyproject.toml` is now `>=3.13`, and importing `nbanetwork` warns on any other version.
+- **certifi**: updated from `2024.8.30` to `2026.10.23` in `requirements.txt`. `sagemaker_inference/code/requirements.txt` now requires `certifi>=2026.10.19`. The new bundle no longer contains the affected roots (`AAA Certificate Services`, `emSign ECC Root CA - G3`).
+- **pip / uv**: use pip `>=26.2.2` and uv `>=0.13.5`. `make requirements` already upgrades pip.
+- **Dependencies**: packages without wheels for Python 3.14 were upgraded, including `torch` 2.11.0, `torch-geometric` 2.8.1 (2.6.1 fails on Python 3.14), `numpy` 2.5.4 and `pandas` 2.3.3. The `-e git+ssh://...` line, which installed an old commit of this repository over SSH, was removed from `requirements.txt`. Use `pip install -e .` instead.
+- **GitHub Actions**: this repository has no workflows. If you add one that publishes to PyPI, use `pypa/gh-action-pypi-publish` `>=1.14.3`, pin every action by full commit SHA, and keep `permissions:` minimal.
+- **SageMaker**: the Python version of the inference container is set by the SageMaker framework image, not by this repository. Use an image that ships one of the supported Python versions.
+
+You can check that your environment no longer trusts the affected roots:
+```
+python -c "import certifi; b=open(certifi.where()).read(); print(certifi.__version__, 'emSign ECC Root CA - G3' in b)"
+# expected: 2026.10.23 False
 ```
 
 ## Players Chemistry Network
@@ -97,8 +127,8 @@ sh scripts/player_chemistry/plot/plot_common_player_relation_network_by_assist.s
 │
 ├── scripts            <- Scripts to run the pipeline 
 │
-├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-│                         generated with `pip freeze > requirements.txt`
+├── requirements.txt   <- Pinned requirements for reproducing the analysis environment (Python 3.14.9),
+│                         resolved with `uv pip compile`
 │
 ├── setup.cfg          <- Configuration file for flake8 
 │
